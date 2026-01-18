@@ -1,4 +1,3 @@
-cth_assert_not_cmd(cth_package_target_add_modules)
 # cth_package_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
 # Adds C++ module files to a target.
 # pre: target_name exists
@@ -49,7 +48,6 @@ function(cth_package_target_add_modules TARGET_NAME)
     endif()
 endfunction()
 
-cth_assert_not_cmd(cth_package_target_find_package)
 # cth_package_target_find_package(<target_name> <find_package_args>...)
 # Wraps find_package to ensure dependencies are found during build
 # AND recorded for the generated package configuration file using find_dependency.
@@ -87,7 +85,6 @@ find_dependency(${ARGS_STR})
     set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PACKAGE_DEPENDENCIES "${CHECK_BLOCK}\n")
 endfunction()
 
-cth_assert_not_cmd(cth_package_target_include_directories)
 # cth_package_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
 # pre: target_name exists
 function(cth_package_target_include_directories TARGET_NAME)
@@ -137,7 +134,6 @@ function(cth_package_target_include_directories TARGET_NAME)
     endif()
 endfunction()
 
-cth_assert_not_cmd(_cth_finalize_package_targets)
 # _cth_finalize_package_targets()
 # Internal function that performs the actual install(TARGETS) call.
 function(_cth_finalize_package_targets)
@@ -184,7 +180,6 @@ endfunction()
 
 
 
-cth_assert_not_cmd(_cth_setup_package)
 # _cth_setup_package()
 # Updated to support C++ Module metadata export.
 function(_cth_setup_package)
@@ -234,7 +229,6 @@ function(_cth_setup_package)
     )
 endfunction()
 
-cth_assert_not_cmd(_cth_add_package_target)
 # _cth_add_package_target()
 # builds and installs all registered package targets
 # creates a custom target named "${PROJECT_NAME}_install"
@@ -285,7 +279,6 @@ function(_cth_add_package_target)
 endfunction()
 
 
-cth_assert_not_cmd(cth_create_package)
 # cth_create_package()
 # packages the project by setting up the package
 function(cth_create_package)

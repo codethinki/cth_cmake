@@ -1,6 +1,5 @@
 include(cth_assertions)
 
-cth_assert_not_cmd(cth_enable_build_cache)
 # cth_enable_build_cache
 # Enables BuildCache globally by setting compiler launcher variables
 function(cth_enable_build_cache)

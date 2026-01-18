@@ -1,4 +1,4 @@
-cth_assert_not_cmd(cth_glob_cpp)
+
 # cth_glob_cpp(<out_var> <sub_path>)
 # globs recursively for .cpp, .hpp, .inl files in sub_path
 # post: out_var contains the list of found files appended to existing content
@@ -14,7 +14,7 @@ function(cth_glob_cpp OUT_VAR SUB_PATH)
 endfunction()
 
 
-cth_assert_not_cmd(cth_glob_cppm)
+
 # cth_glob_cppm(<out_var> <sub_path>)
 # globs recursively for .cppm files in sub_path
 # post: out_var contains the list of found files appended to existing content
@@ -28,7 +28,7 @@ function(cth_glob_cppm OUT_VAR SUB_PATH)
 endfunction()
 
 
-cth_assert_not_cmd(cth_add_resources)
+
 # cth_add_resources(<target_name> <resource_path>)
 # Adds a post-build command to copy resources to the target directory
 # pre: target_name exists
@@ -51,7 +51,7 @@ function(cth_add_resources TARGET_NAME RESOURCE_PATH)
 endfunction()
 
 
-cth_assert_not_cmd(cth_target_enable_sanitizers)
+
 # cth_target_enable_sanitizers(<target> [CONFIGS <configs...>] [SANITIZERS <sanitizers...>])
 # Enables sanitizers for the given target and configurations
 # pre: target exists
@@ -100,7 +100,7 @@ function(cth_target_enable_sanitizers target)
 endfunction()
 
 
-cth_assert_not_cmd(cth_target_enable_build_cache)
+
 # cth_target_enable_build_cache(<target>)
 # Enables build caching for the target using buildcache
 # pre: target exists
