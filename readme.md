@@ -11,7 +11,9 @@ Requirements [(guide)](#dependencies--installation):
 - `VCPKG_ROOT` must be defined
 
 
-
+<br>
+<br>
+<br>
 
 # overview
 
@@ -33,7 +35,8 @@ To help you set up targets and dependencies quicker:
   - (`cth_target_enable_build_cache` — enable per-target build-cache integration.)
 
 ## cth_install_utilities
-Ever wanted to create a cmake installable package? Now made easy, just build the `<main-component>_package` target and you are good to go
+**Ever wanted to create a cmake installable package?**  
+Now made easy, just build the `<main-component>_package` target and you are good to go:
 
   - `cth_package_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
   - `cth_package_target_find_package` — wrap `find_package` and record the dependency for generated package config files.
@@ -55,7 +58,9 @@ This will also create additional cmake targets but dont worry about it.
 ## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
 
-
+<br>
+<br>
+<br>
 
 # quick start
 1. **install the requirements (guide below)**
