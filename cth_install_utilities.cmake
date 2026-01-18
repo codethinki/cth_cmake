@@ -1,27 +1,25 @@
-#[[[
-# package_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
+cth_assert_not_cmd(cth_package_target_add_modules)
+# cth_package_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
 # Adds C++ module files to a target.
-#]]
-function(package_target_add_modules TARGET_NAME)
+# pre: target_name exists
+# pre: target_name is not an INTERFACE library
+# pre: PUBLIC or PRIVATE arguments are provided
+function(cth_package_target_add_modules TARGET_NAME)
     # 1. Basic existence check
-    if(NOT TARGET ${TARGET_NAME})
-        message(FATAL_ERROR "package_target_add_modules: Target '${TARGET_NAME}' does not exist.")
-    endif()
+    cth_assert_target("${TARGET_NAME}")
 
     # 2. Interface check (C++ Modules cannot be added to INTERFACE libraries)
     get_target_property(TGT_TYPE ${TARGET_NAME} TYPE)
-    if(TGT_TYPE STREQUAL "INTERFACE_LIBRARY")
-        message(FATAL_ERROR "package_target_add_modules: '${TARGET_NAME}' is an INTERFACE library which do NOT support modules")
-    endif()
+    cth_assert_if_not("${TGT_TYPE} STREQUAL \"INTERFACE_LIBRARY\"" 
+        "'${TARGET_NAME}' is an INTERFACE library which do NOT support modules")
 
     set(options "")
     set(oneValueArgs "")
     set(multiValueArgs PUBLIC PRIVATE)
     cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if(NOT "PUBLIC" IN_LIST ARGN AND NOT "PRIVATE" IN_LIST ARGN)
-        message(FATAL_ERROR "package_target_add_modules: No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'.")
-    endif()
+    cth_assert_if("(\"PUBLIC\" IN_LIST ARGN) OR (\"PRIVATE\" IN_LIST ARGN)"
+        "No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'.")
 
     # enable modules & scanning
     set_target_properties(
@@ -44,19 +42,18 @@ function(package_target_add_modules TARGET_NAME)
     endif()
     
     # Register Target for installation logic
-    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS)
+    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     if(NOT "${TARGET_NAME}" IN_LIST INSTALLABLE_TARGETS)
         list(APPEND INSTALLABLE_TARGETS ${TARGET_NAME})
-        set_property(GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS "${INSTALLABLE_TARGETS}")
+        set_property(GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS "${INSTALLABLE_TARGETS}")
     endif()
 endfunction()
 
-#[[[
-# package_target_find_package(<target_name> <find_package_args>...)
+cth_assert_not_cmd(cth_package_target_find_package)
+# cth_package_target_find_package(<target_name> <find_package_args>...)
 # Wraps find_package to ensure dependencies are found during build
 # AND recorded for the generated package configuration file using find_dependency.
-#]]
-function(package_target_find_package TARGET_NAME)
+function(cth_package_target_find_package TARGET_NAME)
     # 1. Standard find_package for the current build
     find_package(${ARGN})
 
@@ -87,14 +84,14 @@ block(SCOPE_FOR VARIABLES)
 endblock()
 find_dependency(${ARGS_STR})
 ")
-    set_property(GLOBAL APPEND_STRING PROPERTY _PROJECT_PACKAGE_DEPENDENCIES "${CHECK_BLOCK}\n")
+    set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PACKAGE_DEPENDENCIES "${CHECK_BLOCK}\n")
 endfunction()
 
-#[[[
-# package_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
-#]]
-function(package_target_include_directories TARGET_NAME)
-    set(options "")
+cth_assert_not_cmd(cth_package_target_include_directories)
+# cth_package_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
+# pre: target_name exists
+function(cth_package_target_include_directories TARGET_NAME)
+    cth_assert_target("${TARGET_NAME}")
     set(oneValueArgs "")
     set(multiValueArgs PUBLIC PRIVATE INTERFACE)
     cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -133,19 +130,18 @@ function(package_target_include_directories TARGET_NAME)
     endif()
 
     # Register Target
-    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS)
+    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     if(NOT "${TARGET_NAME}" IN_LIST INSTALLABLE_TARGETS)
         list(APPEND INSTALLABLE_TARGETS ${TARGET_NAME})
-        set_property(GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS ${INSTALLABLE_TARGETS})
+        set_property(GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS ${INSTALLABLE_TARGETS})
     endif()
 endfunction()
 
-#[[[
-# _finalize_package_targets()
+cth_assert_not_cmd(_cth_finalize_package_targets)
+# _cth_finalize_package_targets()
 # Internal function that performs the actual install(TARGETS) call.
-#]]
-function(_finalize_package_targets)
-    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS)
+function(_cth_finalize_package_targets)
+    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     include(GNUInstallDirs)
     
     # We use a consistent export set name based on the project name
@@ -187,11 +183,11 @@ endfunction()
 
 
 
-#[[[
-# _setup_package()
+
+cth_assert_not_cmd(_cth_setup_package)
+# _cth_setup_package()
 # Updated to support C++ Module metadata export.
-#]]
-function(_setup_package)
+function(_cth_setup_package)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
 
@@ -210,7 +206,7 @@ function(_setup_package)
     )
 
     # --- Part 2: Auto-generate and Install Config/Version files ---
-    get_property(PACKAGE_DEPENDENCIES GLOBAL PROPERTY _PROJECT_PACKAGE_DEPENDENCIES)
+    get_property(PACKAGE_DEPENDENCIES GLOBAL PROPERTY _CTH_PACKAGE_DEPENDENCIES)
 
     set(TEMP_CONFIG_IN_PATH "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
     file(WRITE ${TEMP_CONFIG_IN_PATH}
@@ -238,16 +234,14 @@ function(_setup_package)
     )
 endfunction()
 
-#[[[
-# _add_package_target()
+cth_assert_not_cmd(_cth_add_package_target)
+# _cth_add_package_target()
 # builds and installs all registered package targets
 # creates a custom target named "${PROJECT_NAME}_install"
-#]]
-function(_add_package_target)
-    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _PROJECT_INSTALLABLE_TARGETS)
-    if (NOT INSTALLABLE_TARGETS)
-        message(FATAL_ERROR "No installable targets were registered, use package_target_include_directories or add to INSTALLABLE_TARGETS manually")
-    endif ()
+# pre: INSTALLABLE_TARGETS property is not empty
+function(_cth_add_package_target)
+    get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
+    cth_assert_if("INSTALLABLE_TARGETS" "No installable targets were registered — use cth_package_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
 
     set(INSTALL_TARGET_NAME "${PROJECT_NAME}_package")
     set(INSTALL_COMMENT "Packaging ${PROJECT_NAME} project...")
@@ -290,11 +284,12 @@ function(_add_package_target)
     add_dependencies(${INSTALL_TARGET_NAME} _do_${INSTALL_TARGET_NAME}_install)
 endfunction()
 
-#[[[
+
+cth_assert_not_cmd(cth_create_package)
+# cth_create_package()
 # packages the project by setting up the package
-#]]
-function(create_package)
-    _finalize_package_targets()
-    _setup_package()
-    _add_package_target()
+function(cth_create_package)
+    _cth_finalize_package_targets()
+    _cth_setup_package()
+    _cth_add_package_target()
 endfunction()
