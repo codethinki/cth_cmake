@@ -119,9 +119,14 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     1. install [scoop](https://scoop.sh/) (windows only)
     2. `scoop bucket add extras`
     3. `scoop install BuildCache`
+    
+
+    you can disable BuildCache by defining `CTH_DISABLE_FULL_BUILD_CACHE`
 
 -  [vcpkg](https://github.com/microsoft/vcpkg)
     1. install vcpkg
     2. open your repo in the terminal
     3. `vcpkg new --application` (add local manifest)
     4. add packages via: `vcpkg add port <your_package_here>`
+
+    altho i strongly advise againt it, you can disable automatic vcpkg integration with `CTH_DISABLE_VCPKG_INTEGRATION` 

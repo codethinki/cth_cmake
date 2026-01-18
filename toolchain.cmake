@@ -6,12 +6,18 @@ list(APPEND CMAKE_MODULE_PATH "${CTH_CMAKE_LIBRARY_DIR}")
 message("Appended ${CTH_CMAKE_LIBRARY_DIR} to module path")
 
 include(cth_assertions)
-include(cth_tool_utilities)
 
 
+#enable BuildCache
+if(NOT CTH_DISABLE_FULL_BUILD_CACHE)
+    include(cth_tool_utilities)
+    cth_enable_build_cache()
+endif()
 
 #delegate to vcpkg
-cth_assert_program(vcpkg)
-cth_assert_not_empty("$ENV{VCPKG_ROOT}")
+if(NOT CTH_DISABLE_VCPKG_INTEGRATION)
+    cth_assert_program(vcpkg)
+    cth_assert_not_empty("$ENV{VCPKG_ROOT}")
 
-include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+endif()
