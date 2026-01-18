@@ -13,7 +13,7 @@ Requirements [(guide)](#dependencies--installation):
 
 <br>
 <br>
-<br>
+
 
 # overview
 
@@ -58,7 +58,6 @@ This will also create additional cmake targets but dont worry about it.
 ## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
 
-<br>
 <br>
 <br>
 
