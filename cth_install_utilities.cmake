@@ -9,16 +9,20 @@ function(cth_pkg_target_add_modules TARGET_NAME)
 
     # 2. Interface check (C++ Modules cannot be added to INTERFACE libraries)
     get_target_property(TGT_TYPE ${TARGET_NAME} TYPE)
-    cth_assert_if_not("${TGT_TYPE} STREQUAL \"INTERFACE_LIBRARY\"" 
-        "'${TARGET_NAME}' is an INTERFACE library which do NOT support modules")
+    cth_assert_if_not(
+        "'${TARGET_NAME}' is an INTERFACE library which do NOT support modules"
+        "${TGT_TYPE}" STREQUAL "INTERFACE_LIBRARY"
+    )
 
     set(options "")
     set(oneValueArgs "")
     set(multiValueArgs PUBLIC PRIVATE)
     cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    cth_assert_if("(\"PUBLIC\" IN_LIST ARGN) OR (\"PRIVATE\" IN_LIST ARGN)"
-        "No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'.")
+    cth_assert_if(
+        "No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'."
+        (("PUBLIC" IN_LIST ARGN) OR ("PRIVATE" IN_LIST ARGN))
+    )
 
     # enable modules & scanning
     set_target_properties(
@@ -235,7 +239,7 @@ endfunction()
 # pre: _CTH_INSTALLABLE_TARGETS global property is not empty
 function(_cth_add_pkg_target)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
-    cth_assert_if("INSTALLABLE_TARGETS" "No installable targets were registered — use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
+    cth_assert_not_empty("${INSTALLABLE_TARGETS}" "No installable targets were registered — use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
 
     set(INSTALL_TARGET_NAME "${PROJECT_NAME}_package")
     set(INSTALL_COMMENT "Packaging ${PROJECT_NAME} project...")

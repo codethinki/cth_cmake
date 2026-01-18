@@ -3,7 +3,20 @@ cmake_minimum_required(VERSION 4.1)
 # _cth_assertion_failure(<reason> <args...>)
 # post: terminates configuration with FATAL_ERROR
 macro(_cth_assertion_failure reason)
-    message(FATAL_ERROR "ERROR: ${reason} [args: ${ARGN}]")
+    
+
+    if("${reason}" STREQUAL "")
+        set(reason "unknown reason")
+    endif()
+    if("${ARGN}" STREQUAL "")
+        set(ARG_STR "")  
+    else()
+        set(ARG_STR "[args: ${ARGN}]")
+    endif()
+
+
+
+    message(FATAL_ERROR "ERROR: ${reason}${ARG_STR}")
 endmacro()
 
 # cth_assert_if(<reason> <condition...>)
@@ -51,13 +64,17 @@ endfunction()
 # cth_assert_empty(<value>)
 # post: value is an empty string
 function(cth_assert_empty value)
-    cth_assert_if("Value not empty: '${value}'" "${value}" STREQUAL "")
+    if(NOT ("${value}" STREQUAL ""))
+        _cth_assertion_failure("Value not empty: '${value}'")
+    endif()
 endfunction()
 
 # cth_assert_not_empty(<value>)
 # post: value is NOT an empty string
 function(cth_assert_not_empty value)
-    cth_assert_if_not("Value is empty" "${value}" STREQUAL "")
+    if("${value}" STREQUAL "")
+        _cth_assertion_failure("Value is empty")
+    endif()
 endfunction()
 
 # cth_assert_program(<prog>)
@@ -68,6 +85,7 @@ function(cth_assert_program prog)
     
     find_program(${VAR_NAME} "${prog}")
     
+    # find_program returns a CMake-style path (forward slashes) so it is safe
     cth_assert_if("Program '${prog}' not found" ${VAR_NAME})
     
     set(${VAR_NAME} "${${VAR_NAME}}" PARENT_SCOPE)
