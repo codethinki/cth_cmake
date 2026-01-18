@@ -48,8 +48,10 @@ Now made easy, just build the `<main-component>_package` target and you are good
 This will also create additional cmake targets but dont worry about it.
 
 ## cth_setup_utilities
-  - `set_cth_compiler_specifics` — apply compiler-specific common flags (MSVC vs others).
-  - `set_newest_c_cpp_standard` (macro) — prefer the newest supported C/C++ standard and set related policy/flags.
+this is more or less for me, very handy but no backwards compatibility guaranteed
+
+  - `cth_set_compiler_specifics` — apply compiler-specific common flags (MSVC vs others).
+  - `cth_set_newest_c_cpp_standard` (macro) — prefer the newest supported C/C++ standard and set related policy/flags.
 
 
 ## cth_tool_utilities

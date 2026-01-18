@@ -1,4 +1,4 @@
-function(set_cth_compiler_specifics)
+function(cth_set_compiler_specifics)
 message("Using compiler ${CMAKE_CXX_COMPILER}")
 
 if(MSVC)
@@ -10,7 +10,7 @@ endfunction()
 
 
 
-macro(set_newest_c_cpp_standard)
+macro(cth_set_newest_c_cpp_standard)
 if(MSVC)
 	set(CMAKE_CXX_STANDARD 23)
 	add_compile_options(/std:c++latest)
