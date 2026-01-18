@@ -1,5 +1,5 @@
 # cth cmake
-This is an opinionated c++ cmake utility library to enable quicker and safer use of cmake. 
+This is an opinionated cross-platform c++ cmake utility library to enable quicker and safer use of cmake. 
 
 **[Quick Start](#quick-start)**
 
@@ -13,9 +13,9 @@ Requirements [(guide)](#dependencies--installation):
 
 
 
-## overview
+# overview
 
-### cth_assertions
+## cth_assertions
 Simple assertions that every language should have:
   - `cth_assert_if[_not]` — check boolean conditions and fail configuration when the condition is (not) met.
   - `cth_assert_[_not]_cmd` — verify a CMake command/function is present (not) and fail on mismatch.
@@ -23,7 +23,7 @@ Simple assertions that every language should have:
   - `cth_assert_[_not]_empty` — assert a string value is empty (not).
   - `cth_assert_program` — locate an external program and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
 
-### cth_target_utilities
+## cth_target_utilities
 To help you set up targets and dependencies quicker:
 
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
@@ -32,7 +32,7 @@ To help you set up targets and dependencies quicker:
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
   - (`cth_target_enable_build_cache` — enable per-target build-cache integration.)
 
-### cth_install_utilities
+## cth_install_utilities
 Ever wanted to create a cmake installable package? Now made easy, just build the `<main-component>_package` target and you are good to go
 
   - `cth_package_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
@@ -44,20 +44,20 @@ Ever wanted to create a cmake installable package? Now made easy, just build the
 
 This will also create additional cmake targets but dont worry about it.
 
-### cth_setup_utilities
+## cth_setup_utilities
   - `set_cth_compiler_specifics` — apply compiler-specific common flags (MSVC vs others).
   - `set_newest_c_cpp_standard` (macro) — prefer the newest supported C/C++ standard and set related policy/flags.
 
 
-### cth_tool_utilities
+## cth_tool_utilities
   - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables.
 
-### toolchain.cmake
+## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
 
 
 
-## quick start
+# quick start
 1. **install the requirements (guide below)**
 2. **add as submodule (recommended) or clone normally:**
     - add as submodule:
@@ -106,15 +106,14 @@ This will also create additional cmake targets but dont worry about it.
 
 5. **enjoy :)**
 
-## dependencies & installation
-#### [BuildCache](https://gitlab.com/bits-n-bites/buildcache)
-Windows only quick install guide:
-1. install [scoop](https://scoop.sh/)
-2. `scoop bucket add extras`
-3. `scoop install BuildCache`
+# dependencies & installation
+-  [BuildCache](https://gitlab.com/bits-n-bites/buildcache) (windows guide, dunno for linux :D):
+    1. install [scoop](https://scoop.sh/) (windows only)
+    2. `scoop bucket add extras`
+    3. `scoop install BuildCache`
 
-#### [vcpkg](https://github.com/microsoft/vcpkg)
-1. install vcpkg
-2. open your repo in the terminal
-3. `vcpkg new --application` (add local manifest)
-4. add packages via: `vcpkg add port <your_package_here>`
+-  [vcpkg](https://github.com/microsoft/vcpkg)
+    1. install vcpkg
+    2. open your repo in the terminal
+    3. `vcpkg new --application` (add local manifest)
+    4. add packages via: `vcpkg add port <your_package_here>`
