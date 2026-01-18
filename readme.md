@@ -16,6 +16,7 @@ Requirements [(guide)](#dependencies--installation):
 ## overview
 
 ### cth_assertions
+Simple assertions that every language should have:
   - `cth_assert_if[_not]` — check boolean conditions and fail configuration when the condition is (not) met.
   - `cth_assert_[_not]_cmd` — verify a CMake command/function is present (not) and fail on mismatch.
   - `cth_assert_[_not]_target` — assert a CMake target exists (not) in the current scope.
@@ -23,6 +24,8 @@ Requirements [(guide)](#dependencies--installation):
   - `cth_assert_program` — locate an external program and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
 
 ### cth_target_utilities
+To help you set up targets and dependencies quicker:
+
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm).
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
@@ -30,20 +33,29 @@ Requirements [(guide)](#dependencies--installation):
   - (`cth_target_enable_build_cache` — enable per-target build-cache integration.)
 
 ### cth_install_utilities
+Ever wanted to create a cmake installable package? Now made easy, just build the `<main-component>_package` target and you are good to go
+
   - `cth_package_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
   - `cth_package_target_find_package` — wrap `find_package` and record the dependency for generated package config files.
   - `cth_package_target_include_directories` — configure target include directories with appropriate install interfaces.
   - `cth_create_package` — finalize export sets, generate config/version files, and create the package target.
 
+**This has naming implications**, subcomponents should be named `<main-component>_<subcomponent>` to be installable via `<main-component>::<subcomponent>`.
+
+This will also create additional cmake targets but dont worry about it.
+
 ### cth_setup_utilities
   - `set_cth_compiler_specifics` — apply compiler-specific common flags (MSVC vs others).
   - `set_newest_c_cpp_standard` (macro) — prefer the newest supported C/C++ standard and set related policy/flags.
+
 
 ### cth_tool_utilities
   - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables.
 
 ### toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
+
+
 
 ## quick start
 1. **install the requirements (guide below)**
