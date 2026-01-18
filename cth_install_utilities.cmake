@@ -1,9 +1,9 @@
-# cth_package_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
+# cth_pkg_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
 # Adds C++ module files to a target.
 # pre: target_name exists
 # pre: target_name is not an INTERFACE library
 # pre: PUBLIC or PRIVATE arguments are provided
-function(cth_package_target_add_modules TARGET_NAME)
+function(cth_pkg_target_add_modules TARGET_NAME)
     # 1. Basic existence check
     cth_assert_target("${TARGET_NAME}")
 
@@ -48,10 +48,10 @@ function(cth_package_target_add_modules TARGET_NAME)
     endif()
 endfunction()
 
-# cth_package_target_find_package(<target_name> <find_package_args>...)
+# cth_pkg_target_find_package(<target_name> <find_package_args>...)
 # Wraps find_package to ensure dependencies are found during build
 # AND recorded for the generated package configuration file using find_dependency.
-function(cth_package_target_find_package TARGET_NAME)
+function(cth_pkg_target_find_package TARGET_NAME)
     # 1. Standard find_package for the current build
     find_package(${ARGN})
 
@@ -82,12 +82,12 @@ block(SCOPE_FOR VARIABLES)
 endblock()
 find_dependency(${ARGS_STR})
 ")
-    set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PACKAGE_DEPENDENCIES "${CHECK_BLOCK}\n")
+    set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PKG_DEPENDENCIES "${CHECK_BLOCK}\n")
 endfunction()
 
-# cth_package_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
+# cth_pkg_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
 # pre: target_name exists
-function(cth_package_target_include_directories TARGET_NAME)
+function(cth_pkg_target_include_directories TARGET_NAME)
     cth_assert_target("${TARGET_NAME}")
     set(oneValueArgs "")
     set(multiValueArgs PUBLIC PRIVATE INTERFACE)
@@ -134,9 +134,9 @@ function(cth_package_target_include_directories TARGET_NAME)
     endif()
 endfunction()
 
-# _cth_finalize_package_targets()
+# _cth_finalize_pkg_targets()
 # Internal function that performs the actual install(TARGETS) call.
-function(_cth_finalize_package_targets)
+function(_cth_finalize_pkg_targets)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     include(GNUInstallDirs)
     
@@ -201,13 +201,13 @@ function(_cth_setup_package)
     )
 
     # --- Part 2: Auto-generate and Install Config/Version files ---
-    get_property(PACKAGE_DEPENDENCIES GLOBAL PROPERTY _CTH_PACKAGE_DEPENDENCIES)
+    get_property(PKG_DEPENDENCIES GLOBAL PROPERTY _CTH_PKG_DEPENDENCIES)
 
     set(TEMP_CONFIG_IN_PATH "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
     file(WRITE ${TEMP_CONFIG_IN_PATH}
             "@PACKAGE_INIT@\n\n"
             "include(CMakeFindDependencyMacro)\n"
-            "${PACKAGE_DEPENDENCIES}\n"
+            "${PKG_DEPENDENCIES}\n"
             "include(\"\${CMAKE_CURRENT_LIST_DIR}/${TARGETS_FILENAME}\")\n"
     )
 
@@ -229,13 +229,13 @@ function(_cth_setup_package)
     )
 endfunction()
 
-# _cth_add_package_target()
+# _cth_add_pkg_target()
 # builds and installs all registered package targets
 # creates a custom target named "${PROJECT_NAME}_install"
-# pre: INSTALLABLE_TARGETS property is not empty
-function(_cth_add_package_target)
+# pre: _CTH_INSTALLABLE_TARGETS global property is not empty
+function(_cth_add_pkg_target)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
-    cth_assert_if("INSTALLABLE_TARGETS" "No installable targets were registered — use cth_package_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
+    cth_assert_if("INSTALLABLE_TARGETS" "No installable targets were registered — use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
 
     set(INSTALL_TARGET_NAME "${PROJECT_NAME}_package")
     set(INSTALL_COMMENT "Packaging ${PROJECT_NAME} project...")
@@ -252,19 +252,19 @@ function(_cth_add_package_target)
     endforeach()
     # --- FIX END ---
 
-    set(PACKAGE_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_package_dummy_source.cpp")
+    set(PKG_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_pkg_dummy_source.cpp")
     if(WIN32)
-        file(WRITE ${PACKAGE_DUMMY_SOURCE} 
+        file(WRITE ${PKG_DUMMY_SOURCE} 
             "#define WIN32_LEAN_AND_MEAN\n"
             "#include <Windows.h>\n"
             "int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) { return 0; }\n"
         )
-        add_executable(${INSTALL_TARGET_NAME} WIN32 ${PACKAGE_DUMMY_SOURCE})
+        add_executable(${INSTALL_TARGET_NAME} WIN32 ${PKG_DUMMY_SOURCE})
     else()
-        file(WRITE ${PACKAGE_DUMMY_SOURCE}
+        file(WRITE ${PKG_DUMMY_SOURCE}
             "#include<print>\n int main() { std::println(\"installed :)\"); return 0; }"
         )
-        add_executable(${INSTALL_TARGET_NAME} ${PACKAGE_DUMMY_SOURCE})
+        add_executable(${INSTALL_TARGET_NAME} ${PKG_DUMMY_SOURCE})
     endif()
 
     add_custom_target(_do_${INSTALL_TARGET_NAME}_install
@@ -282,7 +282,7 @@ endfunction()
 # cth_create_package()
 # packages the project by setting up the package
 function(cth_create_package)
-    _cth_finalize_package_targets()
+    _cth_finalize_pkg_targets()
     _cth_setup_package()
-    _cth_add_package_target()
+    _cth_add_pkg_target()
 endfunction()

@@ -1,6 +1,8 @@
 # cth cmake
 This is an opinionated cross-platform c++ cmake utility library to enable quicker and safer use of cmake. 
 
+**VERY PRE ALPHA CURRENTLY, DONT EXPECT BACKWARDS COMPATIBILITY**
+
 **[Quick Start](#quick-start)**
 
 
@@ -38,9 +40,9 @@ To help you set up targets and dependencies quicker:
 **Ever wanted to create a cmake installable package?**  
 Now made easy, just build the `<main-component>_package` target and you are good to go:
 
-  - `cth_package_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
-  - `cth_package_target_find_package` — wrap `find_package` and record the dependency for generated package config files.
-  - `cth_package_target_include_directories` — configure target include directories with appropriate install interfaces.
+  - `cth_pkg_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
+  - `cth_pkg_target_find_package` — wrap `find_package` and record the dependency for generated package config files.
+  - `cth_pkg_target_include_directories` — configure target include directories with appropriate install interfaces.
   - `cth_create_package` — finalize export sets, generate config/version files, and create the package target.
 
 **This has naming implications**, subcomponents should be named `<main-component>_<subcomponent>` to be installable via `<main-component>::<subcomponent>`.
