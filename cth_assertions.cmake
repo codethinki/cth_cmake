@@ -9,20 +9,20 @@ endmacro()
 # cth_assert_if(<condition> <reason> <args...>)
 # pre: condition is a cmake bool expression
 # post: condition is TRUE
-macro(cth_assert_if condition reason)
+function(cth_assert_if condition reason)
     if(NOT (${condition}))
         _cth_assertion_failure("${reason}" ${ARGN})
     endif()
-endmacro()
+endfunction()
 
 # cth_assert_if_not(<condition> <reason> <args...>)
 # pre: condition is a cmake bool expression
 # post: condition is FALSE
-macro(cth_assert_if_not condition reason)
+function(cth_assert_if_not condition reason)
     if(${condition})
         _cth_assertion_failure("${reason}" ${ARGN})
     endif()
-endmacro()
+endfunction()
 
 # cth_assert_not_cmd(<cmd>)
 # post: cmd is NOT a defined command/function/macro
