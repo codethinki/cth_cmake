@@ -27,25 +27,25 @@ endfunction()
 # cth_assert_not_cmd(<cmd>)
 # post: cmd is NOT a defined command/function/macro
 function(cth_assert_not_cmd cmd)
-    cth_assert_if_not("COMMAND ${cmd}" "Command '${cmd}' already defined")
+    cth_assert_if_not(COMMAND ${cmd} "Command '${cmd}' already defined")
 endfunction()
 
 # cth_assert_cmd(<cmd>)
 # post: cmd is a defined command/function/macro
 function(cth_assert_cmd cmd)
-    cth_assert_if("COMMAND ${cmd}" "Command '${cmd}' not defined")
+    cth_assert_if(COMMAND ${cmd} "Command '${cmd}' not defined")
 endfunction()
 
 # cth_assert_target(<target>)
 # post: target exists
 function(cth_assert_target target)
-    cth_assert_if("TARGET ${target}" "Target '${target}' does not exist")
+    cth_assert_if(TARGET ${target} "Target '${target}' does not exist")
 endfunction()
 
 # cth_assert_not_target(<target>)
 # post: target does NOT exist
 function(cth_assert_not_target target)
-    cth_assert_if_not("TARGET ${target}" "Target '${target}' already exists")
+    cth_assert_if_not(TARGET ${target} "Target '${target}' already exists")
 endfunction()
 
 # cth_assert_empty(<value>)
