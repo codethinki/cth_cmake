@@ -1,14 +1,14 @@
 
-# cth_glob(<out_var> <sub_path> [EXTENSIONS <extensions...>])
-# globs recursively for file extensions in sub_path
+# cth_glob(<out_var> <sub_path> [PATTERNS <patterns...>])
+# globs recursively for file patterns in sub_path
 # post: out_var contains the list of found files appended to existing content
 function(cth_glob OUT_VAR SUB_PATH)
-    set(multiValueArgs EXTENSIONS)
+    set(multiValueArgs PATTERNS)
     cmake_parse_arguments(PARSE_ARGV 2 ARG "" "" "${multiValueArgs}")
 
     set(GLOB_PATTERNS "")
-    foreach(EXT IN LISTS ARG_EXTENSIONS)
-        list(APPEND GLOB_PATTERNS "${SUB_PATH}/*.${EXT}")
+    foreach(PATTERN IN LISTS ARG_PATTERNS)
+        list(APPEND GLOB_PATTERNS "${SUB_PATH}/${PATTERN}")
     endforeach()
 
     if(GLOB_PATTERNS)
@@ -24,7 +24,7 @@ endfunction()
 # globs recursively for .cpp, .hpp, .inl files in sub_path
 # post: out_var contains the list of found files appended to existing content
 function(cth_glob_cpp OUT_VAR SUB_PATH)
-    cth_glob(${OUT_VAR} "${SUB_PATH}" EXTENSIONS cpp hpp inl)
+    cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cpp" "*.hpp" "*.inl")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
@@ -33,7 +33,7 @@ endfunction()
 # globs recursively for .cppm files in sub_path
 # post: out_var contains the list of found files appended to existing content
 function(cth_glob_cppm OUT_VAR SUB_PATH)
-    cth_glob(${OUT_VAR} "${SUB_PATH}" EXTENSIONS cppm)
+    cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cppm")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 

@@ -30,7 +30,7 @@ Simple assertions that every language should have:
 ## cth_target_utilities
 To help you set up targets and dependencies quicker:
 
-  - `cth_glob` — generic recursive glob for specified file extensions and append results to a variable.
+  - `cth_glob` — generic recursive glob for specified file patterns/masks and append results to a variable.
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm).
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
