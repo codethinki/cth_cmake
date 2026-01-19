@@ -5,8 +5,7 @@ message(STATUS "---- cth_cmake toolchain ----")
 #append cmake dir to module path
 set(CTH_CMAKE_LIBRARY_DIR ${CMAKE_CURRENT_LIST_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CTH_CMAKE_LIBRARY_DIR}")
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" CACHE STRING "Search path for CMake modules" FORCE)
-message(STATUS "Appended ${CTH_CMAKE_LIBRARY_DIR} to module path")
+message(STATUS "appended ${CTH_CMAKE_LIBRARY_DIR} do cmake module path")
 
 include(cth_assertions)
 
