@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 4.0.0)
 
+message(STATUS "----cth_cmake toolchain----")
+
 #append cmake dir to module path
 set(CTH_CMAKE_LIBRARY_DIR ${CMAKE_CURRENT_LIST_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CTH_CMAKE_LIBRARY_DIR}")
