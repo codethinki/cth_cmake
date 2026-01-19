@@ -25,11 +25,12 @@ Simple assertions that every language should have:
   - `cth_assert_[_not]_cmd` — verify a CMake command/function is present (not) and fail on mismatch.
   - `cth_assert_[_not]_target` — assert a CMake target exists (not) in the current scope.
   - `cth_assert_[_not]_empty` — assert a string value is empty (not).
-  - `cth_assert_program` — locate an external program and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
+  - `cth_assert_program` — locate an external program (supports `find_program` args) and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
 
 ## cth_target_utilities
 To help you set up targets and dependencies quicker:
 
+  - `cth_glob` — generic recursive glob for specified file extensions and append results to a variable.
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm).
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
