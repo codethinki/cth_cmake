@@ -77,15 +77,14 @@ function(cth_assert_not_empty value)
     endif()
 endfunction()
 
-# cth_assert_program(<prog>)
+# cth_assert_program(<prog> [args...])
 # post: <PROG>_PROGRAM is set in PARENT_SCOPE
 function(cth_assert_program prog)
     string(TOUPPER "${prog}" PROG_UPPER)
     set(VAR_NAME "${PROG_UPPER}_PROGRAM")
     
-    find_program(${VAR_NAME} "${prog}")
+    find_program(${VAR_NAME} "${prog}" ${ARGN})
     
-    # find_program returns a CMake-style path (forward slashes) so it is safe
     cth_assert_if("Program '${prog}' not found" ${VAR_NAME})
     
     set(${VAR_NAME} "${${VAR_NAME}}" PARENT_SCOPE)
