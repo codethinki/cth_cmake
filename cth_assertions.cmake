@@ -39,21 +39,24 @@ endmacro()
 
    .. code-block:: cmake
 
-      cth_assert_if(<reason> <condition...>)
+      cth_assert_if(<condition...> REASON <reason>)
 
    Asserts that a boolean condition evaluates to TRUE, terminating configuration otherwise.
 
-   :param reason: Error message to display if the condition is FALSE
-   :type reason: string
    :param condition: CMake boolean expression to evaluate
    :type condition: boolean expression
+   :param REASON: Error message to display if the condition is FALSE
+   :type REASON: string
 
    :pre: condition is a valid CMake boolean expression
    :post: condition evaluates to TRUE, or configuration terminates with FATAL_ERROR
 
-macro(cth_assert_if reason)
-    if(NOT ${ARGN})
-        _cth_assertion_failure("${reason}")
+macro(cth_assert_if)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
+    
+    if(NOT ${ARG_UNPARSED_ARGUMENTS})
+        _cth_assertion_failure("${ARG_REASON}")
     endif()
 endmacro()
 
@@ -61,21 +64,24 @@ endmacro()
 
    .. code-block:: cmake
 
-      cth_assert_if_not(<reason> <condition...>)
+      cth_assert_if_not(<condition...> REASON <reason>)
 
    Asserts that a boolean condition evaluates to FALSE, terminating configuration otherwise.
 
-   :param reason: Error message to display if the condition is TRUE
-   :type reason: string
    :param condition: CMake boolean expression to evaluate
    :type condition: boolean expression
+   :param REASON: Error message to display if the condition is TRUE
+   :type REASON: string
 
    :pre: condition is a valid CMake boolean expression
    :post: condition evaluates to FALSE, or configuration terminates with FATAL_ERROR
 
-macro(cth_assert_if_not reason)
-    if(${ARGN})
-        _cth_assertion_failure("${reason}")
+macro(cth_assert_if_not)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
+    
+    if(${ARG_UNPARSED_ARGUMENTS})
+        _cth_assertion_failure("${ARG_REASON}")
     endif()
 endmacro()
 
@@ -93,7 +99,7 @@ endmacro()
    :post: cmd is NOT a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
 function(cth_assert_not_cmd cmd)
-    cth_assert_if_not("Command '${cmd}' already defined" COMMAND ${cmd})
+    cth_assert_if_not(COMMAND ${cmd} REASON "Command '${cmd}' already defined")
 endfunction()
 
 .. command:: cth_assert_cmd
@@ -110,7 +116,7 @@ endfunction()
    :post: cmd is a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
 function(cth_assert_cmd cmd)
-    cth_assert_if("Command '${cmd}' not defined" COMMAND ${cmd})
+    cth_assert_if(COMMAND ${cmd} REASON "Command '${cmd}' not defined")
 endfunction()
 
 .. command:: cth_assert_target
@@ -127,7 +133,7 @@ endfunction()
    :post: target exists, or configuration terminates with FATAL_ERROR
 
 function(cth_assert_target target)
-    cth_assert_if("Target '${target}' does not exist" TARGET ${target})
+    cth_assert_if(TARGET ${target} REASON "Target '${target}' does not exist")
 endfunction()
 
 .. command:: cth_assert_not_target
@@ -144,7 +150,7 @@ endfunction()
    :post: target does NOT exist, or configuration terminates with FATAL_ERROR
 
 function(cth_assert_not_target target)
-    cth_assert_if_not("Target '${target}' already exists" TARGET ${target})
+    cth_assert_if_not(TARGET ${target} REASON "Target '${target}' already exists")
 endfunction()
 
 .. command:: cth_assert_empty
@@ -210,7 +216,7 @@ function(cth_assert_program prog)
     
     find_program(${VAR_NAME} "${prog}" ${ARGN})
     
-    cth_assert_if("Program '${prog}' not found" ${VAR_NAME})
+    cth_assert_if(${VAR_NAME} REASON "Program '${prog}' not found")
     
     set(${VAR_NAME} "${${VAR_NAME}}" PARENT_SCOPE)
 endfunction()
