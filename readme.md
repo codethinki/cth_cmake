@@ -69,7 +69,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 1. **install the requirements (guide below)**
 2. **add as submodule (recommended) or clone normally:**
     - add as submodule:
-        - `git submodule add https://github.com/codethinki/cth_cmake.git cth_cmake/`
+        - `git submodule add https://github.com/codethinki/cth_cmake.git lib/cth_cmake/`
         - `git submodule update --init --recursive`
 
     - or `git clone https://github.com/codethinki/cth_cmake` 
@@ -86,7 +86,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
                     "hidden": true,
                     "cacheVariables": {
                                     //replace with <path_to_clone> if you dont use submodule
-                        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cth_cmake/toolchain.cmake"
+                        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/lib/cth_cmake/toolchain.cmake"
                     }
                 },
                 //...
