@@ -9,7 +9,6 @@ This is an opinionated cross-platform c++ cmake utility library to enable quicke
 Requirements [(guide)](#dependencies--installation):
 - [cmake](https://cmake.org/) 4+
 - [vcpkg](https://github.com/microsoft/vcpkg)
-- [BuildCache](https://gitlab.com/bits-n-bites/buildcache)
 - `VCPKG_ROOT` must be defined
 
 
@@ -35,7 +34,7 @@ To help you set up targets and dependencies quicker:
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm).
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
-  - (`cth_target_enable_build_cache` — enable per-target build-cache integration.)
+  - `cth_target_enable_build_cache` — enable per-target build-cache integration ([installation](#optional))
 
 ## cth_install_utilities
 **Ever wanted to create a cmake installable package?**  
@@ -58,7 +57,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 
 
 ## cth_tool_utilities
-  - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables.
+  - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables. ([installation](#optional))
 
 ## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
@@ -116,14 +115,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 5. **enjoy :)**
 
 # dependencies & installation
--  [BuildCache](https://gitlab.com/bits-n-bites/buildcache) (windows guide, dunno for linux :D):
-    1. install [scoop](https://scoop.sh/) (windows only)
-    2. `scoop bucket add extras`
-    3. `scoop install BuildCache`
-    
-
-    you can disable BuildCache by defining `CTH_DISABLE_FULL_BUILD_CACHE`
-
+## Required
 -  [vcpkg](https://github.com/microsoft/vcpkg)
     1. install vcpkg
     2. open your repo in the terminal
@@ -131,3 +123,12 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     4. add packages via: `vcpkg add port <your_package_here>`
 
     altho i strongly advise againt it, you can disable automatic vcpkg integration with `CTH_DISABLE_VCPKG_INTEGRATION` 
+
+## Optional
+-  [BuildCache](https://gitlab.com/bits-n-bites/buildcache)  (windows guide, dunno for linux :D):
+    1. install [scoop](https://scoop.sh/) (windows only)
+    2. `scoop bucket add extras`
+    3. `scoop install BuildCache`
+    
+
+    you can disable BuildCache by defining `CTH_DISABLE_FULL_BUILD_CACHE`

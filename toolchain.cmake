@@ -9,13 +9,6 @@ message(STATUS "appended ${CTH_CMAKE_LIBRARY_DIR} do cmake module path")
 
 include(cth_assertions)
 
-
-#enable BuildCache
-if(NOT CTH_DISABLE_FULL_BUILD_CACHE)
-    include(cth_tool_utilities)
-    cth_enable_build_cache()
-endif()
-
 #delegate to vcpkg
 if(NOT CTH_DISABLE_VCPKG_INTEGRATION)
     cth_assert_program(vcpkg)
