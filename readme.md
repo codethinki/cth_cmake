@@ -33,6 +33,7 @@ To help you set up targets and dependencies quicker:
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm).
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
+  - `cth_target_add_modules` — add C++ module files to a target with PUBLIC/PRIVATE visibility.
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
   - `cth_target_enable_build_cache` — enable per-target build-cache integration ([installation](#optional))
 
@@ -40,7 +41,7 @@ To help you set up targets and dependencies quicker:
 **Ever wanted to create a cmake installable package?**  
 Now made easy, just build the `<main-component>_package` target and you are good to go:
 
-  - `cth_pkg_target_add_modules` — attach C++ module file-sets to a target and register it for installation.
+  - `cth_pkg_target_add_modules` — add C++ module file-sets to a target (via `cth_target_add_modules`) and register it for installation.
   - `cth_pkg_target_find_package` — wrap `find_package` and record the dependency for generated package config files.
   - `cth_pkg_target_include_directories` — configure target include directories with appropriate install interfaces.
   - `cth_create_package` — finalize export sets, generate config/version files, and create the package target.

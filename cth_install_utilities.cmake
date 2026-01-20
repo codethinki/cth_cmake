@@ -1,50 +1,37 @@
-# cth_pkg_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
-# Adds C++ module files to a target.
-# pre: target_name exists
-# pre: target_name is not an INTERFACE library
-# pre: PUBLIC or PRIVATE arguments are provided
+include(cth_target_utilities)
+
+.. command:: cth_pkg_target_add_modules
+
+   .. code-block:: cmake
+
+      cth_pkg_target_add_modules(<target_name> [PUBLIC <files...>] [PRIVATE <files...>])
+
+   Adds C++ module files to a target and registers it for installation.
+
+   :param target_name: Name of the target to add modules to
+   :type target_name: string
+   :param PUBLIC: List of public module files (.cppm)
+   :type PUBLIC: list of file paths
+   :param PRIVATE: List of private module files (.cppm)
+   :type PRIVATE: list of file paths
+
+   :pre: target_name exists
+   :pre: target_name is NOT an INTERFACE library (C++ modules not supported)
+   :pre: At least one of PUBLIC or PRIVATE arguments is provided
+   :post: Module files are added to target and target is registered for installation
+
+   .. note::
+      This function delegates to ``cth_target_add_modules()`` for core module handling,
+      then registers the target for installation.
+
+   .. seealso::
+      Use ``cth_target_add_modules()`` from cth_target_utilities if installation is not needed.
+
 function(cth_pkg_target_add_modules TARGET_NAME)
-    # 1. Basic existence check
-    cth_assert_target("${TARGET_NAME}")
-
-    # 2. Interface check (C++ Modules cannot be added to INTERFACE libraries)
-    get_target_property(TGT_TYPE ${TARGET_NAME} TYPE)
-    cth_assert_if_not(
-        "'${TARGET_NAME}' is an INTERFACE library which do NOT support modules"
-        "${TGT_TYPE}" STREQUAL "INTERFACE_LIBRARY"
-    )
-
-    set(options "")
-    set(oneValueArgs "")
-    set(multiValueArgs PUBLIC PRIVATE)
-    cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    cth_assert_if(
-        "No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'."
-        (("PUBLIC" IN_LIST ARGN) OR ("PRIVATE" IN_LIST ARGN))
-    )
-
-    # enable modules & scanning
-    set_target_properties(
-        ${TARGET_NAME} PROPERTIES
-        CXX_SCAN_FOR_MODULES ON
-    )
-
-    # 3. Private Modules
-    if(ARGS_PRIVATE)
-        target_sources(${TARGET_NAME} PRIVATE 
-            FILE_SET "${TARGET_NAME}_private_modules" TYPE CXX_MODULES FILES ${ARGS_PRIVATE}
-        )
-    endif()
-
-    # 4. Public Modules
-    if(ARGS_PUBLIC)
-        target_sources(${TARGET_NAME} PUBLIC 
-            FILE_SET CXX_MODULES TYPE CXX_MODULES FILES ${ARGS_PUBLIC}
-        )
-    endif()
+    # 1. Add modules to target
+    cth_target_add_modules(${TARGET_NAME} ${ARGN})
     
-    # Register Target for installation logic
+    # 2. Register Target for installation logic
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     if(NOT "${TARGET_NAME}" IN_LIST INSTALLABLE_TARGETS)
         list(APPEND INSTALLABLE_TARGETS ${TARGET_NAME})
@@ -52,9 +39,29 @@ function(cth_pkg_target_add_modules TARGET_NAME)
     endif()
 endfunction()
 
-# cth_pkg_target_find_package(<target_name> <find_package_args>...)
-# Wraps find_package to ensure dependencies are found during build
-# AND recorded for the generated package configuration file using find_dependency.
+.. command:: cth_pkg_target_find_package
+
+   .. code-block:: cmake
+
+      cth_pkg_target_find_package(<target_name> <find_package_args>...)
+
+   Wraps find_package to ensure dependencies are found during build AND recorded for package config files.
+
+   :param target_name: Name of the target that depends on the package
+   :type target_name: string
+   :param find_package_args: Arguments to pass to find_package (package name, version, components, etc.)
+   :type find_package_args: variable arguments
+
+   :post: Package is found via find_package and recorded for generated Config.cmake file using find_dependency
+
+   .. note::
+      The first argument in find_package_args should be the package name.
+      All arguments are recorded and will be passed to find_dependency() in the generated package config.
+
+   .. note::
+      If the package is not found and REQUIRED is specified, a clear error message is generated
+      indicating which component depends on the missing package.
+
 function(cth_pkg_target_find_package TARGET_NAME)
     # 1. Standard find_package for the current build
     find_package(${ARGN})
@@ -89,8 +96,44 @@ find_dependency(${ARGS_STR})
     set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PKG_DEPENDENCIES "${CHECK_BLOCK}\n")
 endfunction()
 
-# cth_pkg_target_include_directories(<target_name> [PUBLIC|PRIVATE|INTERFACE] <dirs>...)
-# pre: target_name exists
+.. command:: cth_pkg_target_include_directories
+
+   .. code-block:: cmake
+
+      cth_pkg_target_include_directories(<target_name>
+                                         [PUBLIC <dirs...>]
+                                         [PRIVATE <dirs...>]
+                                         [INTERFACE <dirs...>])
+
+   Configures target include directories with appropriate build and install interfaces.
+
+   :param target_name: Name of the target to configure
+   :type target_name: string
+   :param PUBLIC: List of public include directories
+   :type PUBLIC: list of directory paths
+   :param PRIVATE: List of private include directories
+   :type PRIVATE: list of directory paths
+   :param INTERFACE: List of interface include directories
+   :type INTERFACE: list of directory paths
+
+   :pre: target_name exists
+   :post: Include directories are configured with BUILD_INTERFACE and INSTALL_INTERFACE generator expressions
+   :post: Public/Interface headers are installed to their respective directories
+   :post: Target EXPORT_NAME is set (strips project name prefix if present)
+
+   .. note::
+      **Directory handling:**
+
+      - BUILD_INTERFACE: Points to source directory during build
+      - INSTALL_INTERFACE: Points to install directory for consumers
+      - PRIVATE directories are NOT exported to install interface
+
+   .. note::
+      **Export name stripping:**
+
+      If target name starts with ``${PROJECT_NAME}_``, the prefix is removed for the export name.
+      Example: ``myproject_core`` → export name ``core`` → imported as ``myproject::core``
+
 function(cth_pkg_target_include_directories TARGET_NAME)
     cth_assert_target("${TARGET_NAME}")
     set(oneValueArgs "")
@@ -283,8 +326,28 @@ function(_cth_add_pkg_target)
 endfunction()
 
 
-# cth_create_package()
-# packages the project by setting up the package
+.. command:: cth_create_package
+
+   .. code-block:: cmake
+
+      cth_create_package()
+
+   Finalizes and creates the installable package for the project.
+
+   :post: All registered targets are finalized for installation
+   :post: Package config and version files are generated
+   :post: Package target named ``${PROJECT_NAME}_package`` is created
+
+   .. note::
+      This function orchestrates the complete package creation process:
+
+      1. Finalizes all registered installable targets
+      2. Generates CMake package configuration files
+      3. Creates a custom build target for packaging
+
+   .. note::
+      After calling this, build the ``${PROJECT_NAME}_package`` target to create the package.
+
 function(cth_create_package)
     _cth_finalize_pkg_targets()
     _cth_setup_package()
