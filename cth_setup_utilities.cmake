@@ -1,3 +1,4 @@
+#[[.rst:
 .. command:: cth_set_compiler_specifics
 
    .. code-block:: cmake
@@ -17,6 +18,7 @@
 
       - Adds ``-fexceptions`` flag to enable exception handling
 
+#]]
 function(cth_set_compiler_specifics)
 message("Using compiler ${CMAKE_CXX_COMPILER}")
 
@@ -29,6 +31,7 @@ endfunction()
 
 
 
+#[[.rst:
 .. command:: cth_set_newest_c_cpp_standard
 
    .. code-block:: cmake
@@ -56,6 +59,7 @@ endfunction()
    .. warning::
       This is a macro, not a function. Variables are set in the calling scope.
 
+#]]
 macro(cth_set_newest_c_cpp_standard)
 if(MSVC)
 	set(CMAKE_CXX_STANDARD 23)

@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "configurePresets": [
+
+    {
+      "name": "cth_cmake",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../../toolchain.cmake"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": [
+        "cth_cmake"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+
+  ]
+}

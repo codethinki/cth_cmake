@@ -1,4 +1,5 @@
 
+#[[.rst:
 .. command:: cth_glob
 
    .. code-block:: cmake
@@ -20,6 +21,7 @@
       Uses GLOB_RECURSE with CONFIGURE_DEPENDS to ensure CMake re-runs if files change.
       Results are appended to out_var, preserving any existing content.
 
+#]]
 function(cth_glob OUT_VAR SUB_PATH)
     set(multiValueArgs PATTERNS)
     cmake_parse_arguments(PARSE_ARGV 2 ARG "" "" "${multiValueArgs}")
@@ -38,6 +40,7 @@ function(cth_glob OUT_VAR SUB_PATH)
     endif()
 endfunction()
 
+#[[.rst:
 .. command:: cth_glob_cpp
 
    .. code-block:: cmake
@@ -56,12 +59,14 @@ endfunction()
    .. note::
       Searches for files with extensions: .cpp, .hpp, .inl
 
+#]]
 function(cth_glob_cpp OUT_VAR SUB_PATH)
     cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cpp" "*.hpp" "*.inl")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
 
+#[[.rst:
 .. command:: cth_glob_cppm
 
    .. code-block:: cmake
@@ -80,6 +85,7 @@ endfunction()
    .. note::
       Searches for files with extension: .cppm (C++ module interface files)
 
+#]]
 function(cth_glob_cppm OUT_VAR SUB_PATH)
     cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cppm")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
@@ -87,6 +93,7 @@ endfunction()
 
 
 
+#[[.rst:
 .. command:: cth_add_resources
 
    .. code-block:: cmake
@@ -107,6 +114,7 @@ endfunction()
       The resource directory will be copied to ``$<TARGET_FILE_DIR:target>/<resource_path>``.
       Directory structure is preserved relative to the original resource_path.
 
+#]]
 function(cth_add_resources TARGET_NAME RESOURCE_PATH)
     cth_assert_target("${TARGET_NAME}")
 
@@ -127,6 +135,7 @@ endfunction()
 
 
 
+#[[.rst:
 .. command:: cth_target_enable_sanitizers
 
    .. code-block:: cmake
@@ -162,6 +171,7 @@ endfunction()
    .. warning::
       Unsupported sanitizer names will cause a FATAL_ERROR.
 
+#]]
 function(cth_target_enable_sanitizers target)
     # 1. Validate Target
     cth_assert_target("${target}")
@@ -206,6 +216,7 @@ endfunction()
 
 
 
+#[[.rst:
 .. command:: cth_target_enable_build_cache
 
    .. code-block:: cmake
@@ -228,6 +239,7 @@ endfunction()
    .. seealso::
       Use ``cth_enable_build_cache()`` from cth_tool_utilities to enable globally.
 
+#]]
 function(cth_target_enable_build_cache target)
     cth_assert_target("${target}")
 
@@ -241,6 +253,7 @@ endfunction()
 
 
 
+#[[.rst:
 .. command:: cth_target_add_modules
 
    .. code-block:: cmake
@@ -275,6 +288,7 @@ endfunction()
    .. warning::
       INTERFACE libraries do NOT support C++ modules and will cause a FATAL_ERROR.
 
+#]]
 function(cth_target_add_modules TARGET_NAME)
     # 1. Basic existence check
     cth_assert_target("${TARGET_NAME}")

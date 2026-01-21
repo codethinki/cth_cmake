@@ -1,5 +1,6 @@
 include(cth_assertions)
 
+#[[.rst:
 .. command:: cth_enable_build_cache
 
    .. code-block:: cmake
@@ -22,6 +23,7 @@ include(cth_assertions)
    .. seealso::
       Use ``cth_target_enable_build_cache()`` from cth_target_utilities for per-target control.
 
+#]]
 function(cth_enable_build_cache)
     cth_assert_program(buildcache)
 

@@ -1,5 +1,6 @@
 include(cth_target_utilities)
 
+#[[.rst:
 .. command:: cth_pkg_target_add_modules
 
    .. code-block:: cmake
@@ -27,6 +28,7 @@ include(cth_target_utilities)
    .. seealso::
       Use ``cth_target_add_modules()`` from cth_target_utilities if installation is not needed.
 
+#]]
 function(cth_pkg_target_add_modules TARGET_NAME)
     # 1. Add modules to target
     cth_target_add_modules(${TARGET_NAME} ${ARGN})
@@ -39,6 +41,7 @@ function(cth_pkg_target_add_modules TARGET_NAME)
     endif()
 endfunction()
 
+#[[.rst:
 .. command:: cth_pkg_target_find_package
 
    .. code-block:: cmake
@@ -62,6 +65,7 @@ endfunction()
       If the package is not found and REQUIRED is specified, a clear error message is generated
       indicating which component depends on the missing package.
 
+#]]
 function(cth_pkg_target_find_package TARGET_NAME)
     # 1. Standard find_package for the current build
     find_package(${ARGN})
@@ -96,6 +100,7 @@ find_dependency(${ARGS_STR})
     set_property(GLOBAL APPEND_STRING PROPERTY _CTH_PKG_DEPENDENCIES "${CHECK_BLOCK}\n")
 endfunction()
 
+#[[.rst:
 .. command:: cth_pkg_target_include_directories
 
    .. code-block:: cmake
@@ -134,6 +139,7 @@ endfunction()
       If target name starts with ``${PROJECT_NAME}_``, the prefix is removed for the export name.
       Example: ``myproject_core`` → export name ``core`` → imported as ``myproject::core``
 
+#]]
 function(cth_pkg_target_include_directories TARGET_NAME)
     cth_assert_target("${TARGET_NAME}")
     set(oneValueArgs "")
@@ -183,6 +189,7 @@ endfunction()
 
 # _cth_finalize_pkg_targets()
 # Internal function that performs the actual install(TARGETS) call.
+#]]
 function(_cth_finalize_pkg_targets)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     include(GNUInstallDirs)
@@ -229,6 +236,7 @@ endfunction()
 
 # _cth_setup_package()
 # Updated to support C++ Module metadata export.
+#]]
 function(_cth_setup_package)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
@@ -280,6 +288,7 @@ endfunction()
 # builds and installs all registered package targets
 # creates a custom target named "${PROJECT_NAME}_install"
 # pre: _CTH_INSTALLABLE_TARGETS global property is not empty
+#]]
 function(_cth_add_pkg_target)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
     cth_assert_not_empty("${INSTALLABLE_TARGETS}" "No installable targets were registered — use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
@@ -326,6 +335,7 @@ function(_cth_add_pkg_target)
 endfunction()
 
 
+#[[.rst:
 .. command:: cth_create_package
 
    .. code-block:: cmake
@@ -348,6 +358,7 @@ endfunction()
    .. note::
       After calling this, build the ``${PROJECT_NAME}_package`` target to create the package.
 
+#]]
 function(cth_create_package)
     _cth_finalize_pkg_targets()
     _cth_setup_package()

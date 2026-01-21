@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 4.1)
 
+#[[.rst:
 .. command:: _cth_assertion_failure (internal)
 
    .. code-block:: cmake
@@ -17,7 +18,7 @@ cmake_minimum_required(VERSION 4.1)
 
    .. warning::
       This is an internal function. Use the public assertion functions instead.
-
+#]]
 macro(_cth_assertion_failure reason)
     
 
@@ -35,6 +36,7 @@ macro(_cth_assertion_failure reason)
     message(FATAL_ERROR "ERROR: ${reason}${ARG_STR}")
 endmacro()
 
+#[[.rst:
 .. command:: cth_assert_if
 
    .. code-block:: cmake
@@ -51,15 +53,17 @@ endmacro()
    :pre: condition is a valid CMake boolean expression
    :post: condition evaluates to TRUE, or configuration terminates with FATAL_ERROR
 
-macro(cth_assert_if)
+#]]
+function(cth_assert_if)
     set(oneValueArgs REASON)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
     
     if(NOT ${ARG_UNPARSED_ARGUMENTS})
         _cth_assertion_failure("${ARG_REASON}")
     endif()
-endmacro()
+endfunction()
 
+#[[.rst:
 .. command:: cth_assert_if_not
 
    .. code-block:: cmake
@@ -76,15 +80,17 @@ endmacro()
    :pre: condition is a valid CMake boolean expression
    :post: condition evaluates to FALSE, or configuration terminates with FATAL_ERROR
 
-macro(cth_assert_if_not)
+#]]
+function(cth_assert_if_not)
     set(oneValueArgs REASON)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
     
     if(${ARG_UNPARSED_ARGUMENTS})
         _cth_assertion_failure("${ARG_REASON}")
     endif()
-endmacro()
+endfunction()
 
+#[[.rst:
 .. command:: cth_assert_not_cmd
 
    .. code-block:: cmake
@@ -98,10 +104,12 @@ endmacro()
 
    :post: cmd is NOT a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_not_cmd cmd)
     cth_assert_if_not(COMMAND ${cmd} REASON "Command '${cmd}' already defined")
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_cmd
 
    .. code-block:: cmake
@@ -115,10 +123,12 @@ endfunction()
 
    :post: cmd is a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_cmd cmd)
     cth_assert_if(COMMAND ${cmd} REASON "Command '${cmd}' not defined")
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_target
 
    .. code-block:: cmake
@@ -132,10 +142,12 @@ endfunction()
 
    :post: target exists, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_target target)
     cth_assert_if(TARGET ${target} REASON "Target '${target}' does not exist")
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_not_target
 
    .. code-block:: cmake
@@ -149,10 +161,12 @@ endfunction()
 
    :post: target does NOT exist, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_not_target target)
     cth_assert_if_not(TARGET ${target} REASON "Target '${target}' already exists")
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_empty
 
    .. code-block:: cmake
@@ -166,12 +180,14 @@ endfunction()
 
    :post: value is an empty string, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_empty value)
     if(NOT ("${value}" STREQUAL ""))
         _cth_assertion_failure("Value not empty: '${value}'")
     endif()
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_not_empty
 
    .. code-block:: cmake
@@ -185,12 +201,14 @@ endfunction()
 
    :post: value is NOT an empty string, or configuration terminates with FATAL_ERROR
 
+#]]
 function(cth_assert_not_empty value)
     if("${value}" STREQUAL "")
         _cth_assertion_failure("Value is empty")
     endif()
 endfunction()
 
+#[[.rst:
 .. command:: cth_assert_program
 
    .. code-block:: cmake
@@ -210,6 +228,7 @@ endfunction()
       The output variable name is the uppercase version of prog with "_PROGRAM" appended.
       For example, ``cth_assert_program(git)`` sets ``GIT_PROGRAM``.
 
+#]]
 function(cth_assert_program prog)
     string(TOUPPER "${prog}" PROG_UPPER)
     set(VAR_NAME "${PROG_UPPER}_PROGRAM")
