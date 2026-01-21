@@ -123,7 +123,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     3. `vcpkg new --application` (add local manifest)
     4. add packages via: `vcpkg add port <your_package_here>`
 
-    altho i strongly advise againt it, you can disable automatic vcpkg integration with `CTH_DISABLE_VCPKG_INTEGRATION` 
+    altho i strongly advise against it, you can disable automatic vcpkg integration with `CTH_DISABLE_VCPKG_INTEGRATION` 
 
 ## Optional
 -  [BuildCache](https://gitlab.com/bits-n-bites/buildcache)  (windows guide, dunno for linux :D):
