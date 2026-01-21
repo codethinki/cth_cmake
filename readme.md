@@ -21,9 +21,9 @@ Requirements [(guide)](#dependencies--installation):
 ## cth_assertions
 Simple assertions that every language should have:
   - `cth_assert_if[_not]` — check boolean conditions and fail configuration when the condition is (not) met.
-  - `cth_assert_[_not]_cmd` — verify a CMake command/function is present (not) and fail on mismatch.
-  - `cth_assert_[_not]_target` — assert a CMake target exists (not) in the current scope.
-  - `cth_assert_[_not]_empty` — assert a string value is empty (not).
+  - `cth_assert_[_not]_cmd` — verify a CMake command/function is (not) present and fail on mismatch.
+  - `cth_assert_[_not]_target` — assert a CMake target does (not) exists in the current scope.
+  - `cth_assert_[_not]_empty` — assert a string value is (not) empty.
   - `cth_assert_program` — locate an external program (supports `find_program` args) and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
 
 ## cth_target_utilities
