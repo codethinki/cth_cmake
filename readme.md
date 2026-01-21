@@ -116,7 +116,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 5. **enjoy :)**
 
 # dependencies & installation
-## Required
+## Required (kinda)
 -  [vcpkg](https://github.com/microsoft/vcpkg)
     1. install vcpkg
     2. open your repo in the terminal
@@ -130,6 +130,3 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     1. install [scoop](https://scoop.sh/) (windows only)
     2. `scoop bucket add extras`
     3. `scoop install BuildCache`
-    
-
-    you can disable BuildCache by defining `CTH_DISABLE_FULL_BUILD_CACHE`
