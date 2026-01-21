@@ -80,7 +80,6 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     {
         //...
         "configurePresets": [
-            {
                 //...
                 {
                     "name": "cth_cmake",
@@ -90,8 +89,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
                         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/lib/cth_cmake/toolchain.cmake"
                     }
                 },
-                //...
-            }    
+                //...    
         ]
     }
     ```
@@ -99,7 +97,6 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     ```json
     //...
         "configurePresets": [
-            {
                 //...
                 {
                     "name": "<your_preset>",
@@ -109,7 +106,6 @@ this is more or less for me, very handy but no backwards compatibility guarantee
                     ]
                 },
                 //...
-            }    
         ]
     ```
 
