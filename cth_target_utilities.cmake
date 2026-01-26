@@ -295,7 +295,7 @@ function(cth_target_add_modules TARGET_NAME)
 
     # 2. Interface check (C++ Modules cannot be added to INTERFACE libraries)
     get_target_property(TGT_TYPE ${TARGET_NAME} TYPE)
-    cth_assert_if_not(
+    cth_assert_false(
         "${TGT_TYPE}" STREQUAL "INTERFACE_LIBRARY"
         REASON "'${TARGET_NAME}' is an INTERFACE library which do NOT support modules"
     )
@@ -305,9 +305,9 @@ function(cth_target_add_modules TARGET_NAME)
     set(multiValueArgs PUBLIC PRIVATE)
     cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    cth_assert_if(
-        (("PUBLIC" IN_LIST ARGN) OR ("PRIVATE" IN_LIST ARGN))
-        REASON "No visibility specifiers (PUBLIC/PRIVATE) found for target '${TARGET_NAME}'."
+    cth_assert_empty(
+        "${ARGS_UNPARSED_ARGUMENTS}"
+        REASON "Unparsed arguments found: '${ARGS_UNPARSED_ARGUMENTS}'. All modules must be specified with PUBLIC or PRIVATE keywords."
     )
 
     # 3. Enable modules & scanning

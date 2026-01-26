@@ -8,7 +8,7 @@ include(cth_target_utilities)
 include(cth_install_utilities)
 
 
-cth_set_newest_c_cpp_standard()
+cth_set_latest_c_cpp_standard()
 
 
 #simple target

@@ -20,27 +20,25 @@
 
 #]]
 function(cth_set_compiler_specifics)
-message("Using compiler ${CMAKE_CXX_COMPILER}")
+   message("Using compiler ${CMAKE_CXX_COMPILER}")
 
-if(MSVC)
-	add_compile_options(/utf-8)
-else()
-	add_compile_options(-fexceptions)
-endif()
+   if(MSVC)
+      add_compile_options(/utf-8)
+   else()
+      add_compile_options(-fexceptions)
+   endif()
 endfunction()
 
-
-
 #[[.rst:
-.. command:: cth_set_newest_c_cpp_standard
+.. command:: cth_set_latest_c_cpp_standard
 
    .. code-block:: cmake
 
-      cth_set_newest_c_cpp_standard()
+      cth_set_latest_c_cpp_standard()
 
-   Sets the project to use the newest supported C/C++ standard.
+   Sets the project to use the latest supported C/C++ standard.
 
-   :post: CMAKE_CXX_STANDARD and CMAKE_C_STANDARD are set to newest supported version
+   :post: CMAKE_CXX_STANDARD and CMAKE_C_STANDARD are set to latest supported version
    :post: CMAKE_CXX_STANDARD_REQUIRED is set to ON
 
    .. note::
@@ -60,17 +58,26 @@ endfunction()
       This is a macro, not a function. Variables are set in the calling scope.
 
 #]]
+macro(cth_set_latest_c_cpp_standard)
+   if(MSVC)
+      set(CMAKE_CXX_STANDARD 23)
+      add_compile_options(/std:c++latest)
+   else()
+      set(CMAKE_CXX_STANDARD 26)
+   endif()
+
+   set(CMAKE_C_STANDARD ${CMAKE_CXX_STANDARD})
+
+   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+   message("Set cxx standard to ${CMAKE_CXX_STANDARD}")
+endmacro()
+
+#[[.rst
+deprecated use
+.. code-block:: cmake
+      cth_set_latest_c_cpp_standard()
+#]]
 macro(cth_set_newest_c_cpp_standard)
-if(MSVC)
-	set(CMAKE_CXX_STANDARD 23)
-	add_compile_options(/std:c++latest)
-else()
-	set(CMAKE_CXX_STANDARD 26)
-endif()
-
-set(CMAKE_C_STANDARD ${CMAKE_CXX_STANDARD})
-
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-message("Set cxx standard to ${CMAKE_CXX_STANDARD}")
+   message(WARNING "using deprecated 'cth_set_newest_c_cpp_standard', use 'cth_set_latest_c_cpp_standard' instead")
 endmacro()
