@@ -69,6 +69,7 @@ macro(cth_set_latest_c_cpp_standard)
    set(CMAKE_C_STANDARD ${CMAKE_CXX_STANDARD})
 
    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+   set(CMAKE_CXX_EXTENSIONS OFF)
 
    message("Set cxx standard to ${CMAKE_CXX_STANDARD}")
 endmacro()
