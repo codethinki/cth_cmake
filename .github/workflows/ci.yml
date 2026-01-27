@@ -34,28 +34,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # --- Setup Tools (Linux Container) ---
-      - name: Setup Tools (Linux Container)
+      # --- Setup Tools (Linux / CachyOS) ---
+      - name: Setup Tools (Linux)
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
-          # CachyOS (Arch) uses pacman.
-          # Update keyrings first to avoid signature errors
+          # Update keyrings & system
           pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
           pacman -Su --noconfirm
           
           # Install base tools + cmake/ninja/git/python + vcpkg deps
-          # 'base-devel' includes gcc, make, etc.
-          # vcpkg needs: curl zip unzip tar
           pacman -S --noconfirm --needed base-devel cmake ninja git python python-pip wget curl zip unzip tar
           
-          # Verify zip is found (debugging)
-          which zip
-          zip --version
-          
-          # Force break managed environment if needed for pip
+          # Force break managed environment for pip
           rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
           
-          # Install compilers specifically
+          # Install compilers
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
              pacman -S --noconfirm --needed gcc
              echo "CC=gcc" >> $GITHUB_ENV
@@ -67,7 +60,7 @@ jobs:
              echo "CXX=clang++" >> $GITHUB_ENV
           fi
           
-          # Set Vcpkg to use system binaries to avoid weird glibc mismatches
+          # Force Vcpkg to use system binaries
           echo "VCPKG_FORCE_SYSTEM_BINARIES=1" >> $GITHUB_ENV
 
       # --- Setup Tools (Windows) ---
@@ -76,7 +69,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       # --- Common Setup ---
-      # Windows needs explicit Python setup. Containers have it from apt.
       - name: Setup Python (Windows)
         if: runner.os == 'Windows'
         uses: actions/setup-python@v4
@@ -101,8 +93,7 @@ jobs:
 
       - name: Create Cache Dirs
         shell: bash
-        run: |
-          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
 
       # --- Caching ---
       - name: Cache Vcpkg
