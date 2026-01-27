@@ -21,7 +21,8 @@ on:
         type: string
 
 env:
-  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  # VCPKG_ROOT is NOT set here globally to allow container ENV to take precedence on Linux.
+  # We will set it dynamically in the "Setup Vcpkg" step if it's missing.
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
 
 jobs:
@@ -78,9 +79,27 @@ jobs:
       - name: Setup Vcpkg
         shell: bash
         run: |
+          # 1. Check if VCPKG_ROOT is already set (e.g. by Docker container)
+          if [ -n "$VCPKG_ROOT" ]; then
+            echo "VCPKG_ROOT is already set to: $VCPKG_ROOT"
+            if [ -d "$VCPKG_ROOT" ]; then
+               echo "Vcpkg directory exists. Using: $VCPKG_ROOT"
+               # No action needed, env var is already present in this shell.
+               # To be safe for subsequent steps, we re-export it to GITHUB_ENV if it wasn't there (it is via Docker ENV, but good practice)
+               echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+               exit 0
+            else
+               echo "Warning: VCPKG_ROOT is set but directory missing. Falling back to install."
+            fi
+          fi
+
+          # 2. Check for VCPKG_INSTALLATION_ROOT (GitHub Actions default sometimes)
           if [ -n "$VCPKG_INSTALLATION_ROOT" ] && [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
+            echo "Found VCPKG_INSTALLATION_ROOT: $VCPKG_INSTALLATION_ROOT"
             echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           else
+            # 3. Fallback: Clone and Bootstrap locally
+            echo "Vcpkg not found. Installing to workspace."
             git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
             if [[ "$RUNNER_OS" == "Windows" ]]; then
               "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"

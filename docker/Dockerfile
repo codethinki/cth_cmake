@@ -23,5 +23,15 @@ RUN pacman -Sy --noconfirm archlinux-keyring cachyos-keyring && \
     # Remove EXTERNALLY-MANAGED to allow pip usage if needed (optional but helpful)
     rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 
-# Force vcpkg to use system binaries
+# Install Vcpkg
+RUN git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg && \
+    /opt/vcpkg/bootstrap-vcpkg.sh && \
+    # Clean up to reduce image size
+    rm -rf /opt/vcpkg/downloads/* && \
+    rm -rf /opt/vcpkg/buildtrees/* && \
+    rm -rf /opt/vcpkg/packages/*
+
+# Environment variables
+ENV VCPKG_ROOT=/opt/vcpkg
+ENV PATH=$VCPKG_ROOT:$PATH
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
