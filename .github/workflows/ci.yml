@@ -9,51 +9,80 @@ on:
 env:
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+  BUILDCACHE_DIR: ${{ github.workspace }}/.buildcache
+  # Configures buildcache to be wrapped by CMake
+  CTH_ENABLE_BUILDCACHE: "ON"
 
 jobs:
-  basic:
-    name: basic / ${{ matrix.config.compiler }}
+  test:
+    name: ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
+        example:
+          - name: basic
+            source: examples/basic
+            exe: basic_example_exec
+          - name: modules
+            source: examples/modules
+            exe: modules_executable
         config:
           - { os: windows-latest, compiler: msvc }
           - { os: ubuntu-latest, compiler: gcc }
           - { os: ubuntu-latest, compiler: clang }
+
     steps:
       - uses: actions/checkout@v4
-      
+
+      # --- Setup Tools (Linux) ---
       - name: Setup Tools (Linux)
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build build-essential software-properties-common
+          sudo apt-get install -y ninja-build build-essential software-properties-common wget
           
           # GCC
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-14 g++-14
-            echo "CC=gcc-14" >> $GITHUB_ENV
-            echo "CXX=g++-14" >> $GITHUB_ENV
+            sudo apt-get install -y gcc-15 g++-15
+            echo "CC=gcc-15" >> $GITHUB_ENV
+            echo "CXX=g++-15" >> $GITHUB_ENV
           fi
 
+          # Clang
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-            wget https://apt.llvm.org/llvm.sh
+            wget https://apt.llvm.org/llvm.sh -O llvm.sh
             chmod +x llvm.sh
-            # Use stable versions available in 24.04 era (18/19)
+            # Use Clang 19 for stability
             sudo ./llvm.sh 19
-            
             echo "CC=clang-19" >> $GITHUB_ENV
             echo "CXX=clang++-19" >> $GITHUB_ENV
           fi
 
+          # Install BuildCache (Linux)
+          wget https://gitlab.com/bits-n-bites/buildcache/-/releases/v0.31.7/downloads/buildcache-linux-amd64.tar.gz
+          tar -xvf buildcache-linux-amd64.tar.gz
+          sudo cp buildcache-linux-amd64/buildcache /usr/local/bin/
+          rm -rf buildcache-linux-amd64 buildcache-linux-amd64.tar.gz
+
+      # --- Setup Tools (Windows) ---
       - name: Setup MSVC
         if: matrix.config.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Install BuildCache (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $url = "https://gitlab.com/bits-n-bites/buildcache/-/releases/v0.31.7/downloads/buildcache-windows.zip"
+          $out = "buildcache.zip"
+          Invoke-WebRequest -Uri $url -OutFile $out
+          Expand-Archive -Path $out -DestinationPath "C:\tools\buildcache" -Force
+          "C:\tools\buildcache\buildcache-windows" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      # --- Common Setup ---
       - uses: actions/setup-python@v4
         with: { python-version: '3.x' }
         
@@ -74,6 +103,13 @@ jobs:
               echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
           fi
 
+      - name: Create Cache Dirs
+        shell: bash
+        run: |
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+          mkdir -p "$BUILDCACHE_DIR"
+
+      # --- Caching ---
       - name: Cache Vcpkg
         uses: actions/cache@v4
         with:
@@ -81,104 +117,31 @@ jobs:
           key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
           restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
 
-      - name: Create Cache Dir
-        shell: bash
-        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+      - name: Cache BuildCache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BUILDCACHE_DIR }}
+          key: buildcache-${{ runner.os }}-${{ matrix.config.compiler }}-${{ matrix.example.name }}-${{ github.sha }}
+          restore-keys: |
+            buildcache-${{ runner.os }}-${{ matrix.config.compiler }}-${{ matrix.example.name }}-
 
+      # --- Build & Test ---
       - name: Verify
         shell: bash
         env:
-          EXE_NAME: basic_example_exec
+          EXE_NAME: ${{ matrix.example.exe }}
         run: |
           TARGET_EXE="$EXE_NAME"
           if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
 
+          # Configure buildcache env vars just to be safe, though handled by preset usually if integrated
+          export BUILDCACHE_DIR="$BUILDCACHE_DIR"
+          
           python .github/scripts/verify_and_run.py \
-            --source "examples/basic" \
-            --build "examples/basic/build/preset-default" \
+            --source "${{ matrix.example.source }}" \
+            --build "${{ matrix.example.source }}/build/preset-default" \
             --exe "$TARGET_EXE"
-
-  modules:
-    name: modules / ${{ matrix.config.compiler }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - { os: windows-latest, compiler: msvc }
-          - { os: ubuntu-latest, compiler: gcc }
-          - { os: ubuntu-latest, compiler: clang }
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Tools (Linux)
-        if: startsWith(matrix.config.os, 'ubuntu')
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build build-essential software-properties-common
-          
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
-          
-          if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-14 g++-14
-            echo "CC=gcc-14" >> $GITHUB_ENV
-            echo "CXX=g++-14" >> $GITHUB_ENV
-          fi
-
-          if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-            wget https://apt.llvm.org/llvm.sh
-            chmod +x llvm.sh
-            sudo ./llvm.sh 19
             
-            echo "CC=clang-19" >> $GITHUB_ENV
-            echo "CXX=clang++-19" >> $GITHUB_ENV
-          fi
-
-      - name: Setup MSVC
-        if: matrix.config.compiler == 'msvc'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - uses: actions/setup-python@v4
-        with: { python-version: '3.x' }
-        
-      - run: pip install cmake --upgrade
-
-      - name: Restore Vcpkg (Windows)
-        if: runner.os == 'Windows'
-        run: if ($env:VCPKG_INSTALLATION_ROOT) { echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV }
-
-      - name: Restore Vcpkg (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          if [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
-              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
-          else
-              git clone https://github.com/microsoft/vcpkg.git $GITHUB_WORKSPACE/vcpkg
-              $GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh
-              echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
-          fi
-
-      - name: Cache Vcpkg
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
-      
-      - name: Create Cache Dir
+      - name: BuildCache Stats
         shell: bash
-        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
-        
-      - name: Verify
-        shell: bash
-        env:
-          EXE_NAME: modules_executable
-        run: |
-          TARGET_EXE="$EXE_NAME"
-          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
-
-          python .github/scripts/verify_and_run.py \
-            --source "examples/modules" \
-            --build "examples/modules/build/preset-default" \
-            --exe "$TARGET_EXE"
+        run: buildcache -s

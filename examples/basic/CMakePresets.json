@@ -5,6 +5,7 @@
     {
       "name": "cth_cmake",
       "hidden": true,
+      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../../toolchain.cmake"
       }
