@@ -45,10 +45,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build build-essential
           
-          # Install latest CMake (apt might be old, but we try standard first or snap)
-          # In 2026, apt might be new enough. If not, snap is an option: sudo snap install cmake --classic
-          sudo apt-get install -y cmake 
-
           if [ "${{ matrix.compiler }}" = "clang" ]; then
             sudo apt-get install -y clang
           fi
@@ -61,6 +57,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+
+      - name: Install Latest CMake
+        run: pip install cmake --upgrade
 
       - name: Restore Vcpkg (Windows)
         if: runner.os == 'Windows'
@@ -105,6 +104,7 @@ jobs:
         env:
           EXE_PATH_WINDOWS: ${{ inputs.exe_path_windows }}
           EXE_PATH_UNIX: ${{ inputs.exe_path_unix }}
+        shell: bash
         run: |
           python .github/scripts/verify_and_run.py \
             --source "${{ inputs.source_dir }}" \
