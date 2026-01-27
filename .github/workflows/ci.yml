@@ -9,9 +9,9 @@ on:
 env:
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
-
-jobs:
-  test:
+      # Force vcpkg to use the system binaries we install (zip, curl, etc) 
+      # instead of trying to download them (which often fails in containers)
+      VCPKG_FORCE_SYSTEM_BINARIES: 1
     name: ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
@@ -46,6 +46,11 @@ jobs:
           # 'base-devel' includes gcc, make, etc.
           # vcpkg needs: curl zip unzip tar
           pacman -S --noconfirm base-devel cmake ninja git python python-pip wget curl zip unzip tar
+          
+          # Debug: Verify tools are found
+          echo "Zip location: $(which zip)"
+          echo "Unzip location: $(which unzip)"
+          zip --version | head -n 1
           
           # Force break managed environment if needed for pip
           rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
