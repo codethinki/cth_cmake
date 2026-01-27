@@ -76,6 +76,16 @@ jobs:
         if: runner.os == 'Windows'
         run: pip install cmake --upgrade
 
+      - name: Cache Vcpkg Tool (Windows)
+        if: runner.os == 'Windows'
+        id: cache-vcpkg-tool
+        uses: actions/cache@v4
+        with:
+          path: vcpkg
+          # Invalidate cache if we might want a newer vcpkg. 
+          # For now, a weekly-like key or static one works.
+          key: vcpkg-tool-${{ runner.os }}-v1
+
       - name: Setup Vcpkg
         shell: bash
         run: |
@@ -99,12 +109,20 @@ jobs:
             echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           else
             # 3. Fallback: Clone and Bootstrap locally
-            echo "Vcpkg not found. Installing to workspace."
-            git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
-            if [[ "$RUNNER_OS" == "Windows" ]]; then
-              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"
+            if [ -f "$GITHUB_WORKSPACE/vcpkg/vcpkg" ] || [ -f "$GITHUB_WORKSPACE/vcpkg/vcpkg.exe" ]; then
+                echo "Vcpkg tool found in workspace cache."
             else
-              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh"
+                echo "Vcpkg not found. Installing to workspace."
+                # Only clone if directory doesn't exist (cache restore might have created dir but failed?)
+                if [ ! -d "$GITHUB_WORKSPACE/vcpkg/.git" ]; then
+                    git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
+                fi
+                
+                if [[ "$RUNNER_OS" == "Windows" ]]; then
+                  "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"
+                else
+                  "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh"
+                fi
             fi
             echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
           fi

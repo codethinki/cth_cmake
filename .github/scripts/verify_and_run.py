@@ -83,56 +83,7 @@ def main() -> int:
     
     source_dir = args.source.resolve()
     build_dir = args.build.resolve()
-    # Handle exe path: might be relative to build or absolute
-    exe_path = args.exe
-    if not exe_path.is_absolute():
-        # Try finding it in build dir structure if not explicitly absolute
-        # Common locations: build/exe, build/Release/exe
-        candidates = [
-            build_dir / exe_path,
-            build_dir / args.config / exe_path,
-            build_dir / args.config / exe_path.name
-        ]
-        found = False
-        for c in candidates:
-            if c.exists():
-                exe_path = c
-                found = True
-                break
-        if not found:
-            # Fallback to the first candidate path for error reporting
-            exe_path = candidates[0]
-
-    # Build candidate paths
-    candidates = [
-        build_dir / exe_path,
-        build_dir / args.config / exe_path,
-        build_dir / args.config / exe_path.name
-    ]
     
-    # Heuristic: If strict paths fail, try finding by name in the build tree
-    # This handles simplified vs multi-config layouts automatically.
-    detected_path = None
-    for c in candidates:
-        if c.exists() and c.is_file():
-            detected_path = c
-            break
-            
-    if not detected_path:
-        print(f"[INFO] Strict path check failed. Searching for '{exe_path.name}' in '{build_dir}'...")
-        # Recursive search for the executable file
-        matches = list(build_dir.rglob(exe_path.name))
-        if matches:
-            # Prefer the one that looks like an executable (executable permissions or extension)
-            # For now, just pick the first one, or maybe prefer one in a 'Release' folder?
-            # Let's prefer the one with highest mtime (newest)
-            matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-            detected_path = matches[0]
-            print(f"[INFO] Found: {detected_path}")
-
-    if detected_path:
-        exe_path = detected_path
-
     # ensure build directory exists
     build_dir.mkdir(parents=True, exist_ok=True)
 
@@ -160,6 +111,34 @@ def main() -> int:
     if check_for_issues(log_build):
         print("\n[ERROR] Warnings or errors detected during Build.")
         return 1
+
+    # Resolve executable path AFTER build
+    exe_path = args.exe
+    if not exe_path.is_absolute():
+        # Heuristic search for executable
+        candidates = [
+            build_dir / exe_path,
+            build_dir / args.config / exe_path,
+            build_dir / args.config / exe_path.name
+        ]
+        
+        detected_path = None
+        for c in candidates:
+            if c.exists() and c.is_file():
+                detected_path = c
+                break
+                
+        if not detected_path:
+            # Recursive search if standard locations fail
+            print(f"[INFO] Strict path check failed. Searching for '{exe_path.name}' in '{build_dir}'...")
+            matches = list(build_dir.rglob(exe_path.name))
+            if matches:
+                matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+                detected_path = matches[0]
+                print(f"[INFO] Found: {detected_path}")
+        
+        if detected_path:
+            exe_path = detected_path
 
     # 3. RUN EXECUTABLE
     if not exe_path.exists():
