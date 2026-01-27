@@ -1,59 +1,102 @@
-name: CI
+name: Tests
 
 on:
   push:
+    paths-ignore: ['**.md']
   pull_request:
+    paths-ignore: ['**.md']
 
 jobs:
-  build:
+  test:
+    name: ${{ matrix.example.name }} / ${{ matrix.config.os }} / ${{ matrix.config.compiler }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            compiler: msvc
-          - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-    runs-on: ${{ matrix.os }}
+        example:
+          - name: Basic
+            source: examples/basic
+            exe: basic_example_exec
+          - name: Modules
+            source: examples/modules
+            exe: modules_executable
+        config:
+          - { os: windows-latest, compiler: msvc }
+          - { os: ubuntu-latest, compiler: gcc }
+          - { os: ubuntu-latest, compiler: clang }
+
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup tools (Linux)
-        if: startsWith(matrix.os, 'ubuntu')
+      - name: Setup Tools (Linux)
+        if: startsWith(matrix.config.os, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build python3-pip build-essential
-          if [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y ninja-build build-essential
+          if [ "${{ matrix.config.compiler }}" = "clang" ]; then
             sudo apt-get install -y clang
           fi
+
+      - name: Setup MSVC (Windows)
+        if: matrix.config.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Ensure CMake is available
-        run: cmake --version
+      - name: Install Latest CMake
+        run: pip install cmake --upgrade
 
-      - name: Verify basic example
-        env:
-          EXE_PATH_WINDOWS: examples/basic/build/preset-default/Release/basic_example_exec.exe
-          EXE_PATH_UNIX: examples/basic/build/preset-default/basic_example_exec
+      - name: Restore Vcpkg (Windows)
+        if: runner.os == 'Windows'
         run: |
-          python .github/scripts/verify_and_run.py \
-            --source examples/basic \
-            --build examples/basic/build/preset-default \
-            --exe "${{ matrix.os == 'windows-latest' && env.EXE_PATH_WINDOWS || env.EXE_PATH_UNIX }}"
+          if ($env:VCPKG_INSTALLATION_ROOT) {
+              echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          }
 
-      - name: Verify modules example
-        env:
-          EXE_PATH_WINDOWS: examples/modules/build/preset-default/Release/modules_executable.exe
-          EXE_PATH_UNIX: examples/modules/build/preset-default/modules_executable
+      - name: Restore Vcpkg (Linux)
+        if: runner.os == 'Linux'
         run: |
+          if [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
+              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          else
+              git clone https://github.com/microsoft/vcpkg.git $GITHUB_WORKSPACE/vcpkg
+              $GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh
+              echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
+          fi
+
+      - name: Create Vcpkg Cache Dir
+        run: mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+        shell: bash
+
+      - name: Cache Vcpkg Binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          # Cache key includes compiler and vcpkg.json content to invalidate on changes
+          key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
+
+      - name: Configure, Build, Verify & Run
+        shell: bash
+        env:
+          EXE_NAME: ${{ matrix.example.exe }}
+        run: |
+          # Append .exe extension for Windows if needed
+          TARGET_EXE="$EXE_NAME"
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
+            TARGET_EXE="${EXE_NAME}.exe"
+          fi
+
           python .github/scripts/verify_and_run.py \
-            --source examples/modules \
-            --build examples/modules/build/preset-default \
-            --exe "${{ matrix.os == 'windows-latest' && env.EXE_PATH_WINDOWS || env.EXE_PATH_UNIX }}"
+            --source "${{ matrix.example.source }}" \
+            --build "${{ matrix.example.source }}/build/preset-default" \
+            --exe "$TARGET_EXE"
