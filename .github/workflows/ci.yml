@@ -1,115 +1,22 @@
-name: Tests
+name: CI Pipeline
 
 on:
   push:
     paths-ignore: ['**.md']
   pull_request:
     paths-ignore: ['**.md']
-
-env:
-  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+  workflow_dispatch:
 
 jobs:
-  test:
-    name: ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        example:
-          - name: basic
-            source: examples/basic
-            exe: basic_example_exec
-          - name: modules
-            source: examples/modules
-            exe: modules_executable
-        config:
-          - { os: windows-latest, compiler: msvc }
-          # Using dynamic reference to the container image built in this repo
-          - { os: ubuntu-latest, compiler: gcc, container: "ghcr.io/${{ github.repository_owner }}/cth-ci-env:latest" }
-          - { os: ubuntu-latest, compiler: clang, container: "ghcr.io/${{ github.repository_owner }}/cth-ci-env:latest" }
+  # --- Phase 1: Build Docker Environment ---
+  prepare-env:
+    uses: ./.github/workflows/build-image.yml
+    secrets: inherit
 
-    # Container is used if defined in matrix (Linux legs), ignored otherwise (Windows)
-    container: 
-      image: ${{ matrix.config.container }}
-      credentials:
-         username: ${{ github.actor }}
-         password: ${{ secrets.GITHUB_TOKEN }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # --- Configure Environment (Linux) ---
-      - name: Configure Linux Env
-        if: startsWith(matrix.config.os, 'ubuntu')
-        run: |
-          # Set compilers based on matrix
-          if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-             echo "CC=gcc" >> $GITHUB_ENV
-             echo "CXX=g++" >> $GITHUB_ENV
-          fi
-          if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-             echo "CC=clang" >> $GITHUB_ENV
-             echo "CXX=clang++" >> $GITHUB_ENV
-          fi
-          
-          # Force Vcpkg to use system binaries (curl, zip, etc) provided by the container
-          echo "VCPKG_FORCE_SYSTEM_BINARIES=1" >> $GITHUB_ENV
-
-      # --- Setup Tools (Windows) ---
-      - name: Setup MSVC
-        if: matrix.config.compiler == 'msvc'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      # --- Common Setup ---
-      - name: Setup Python (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/setup-python@v4
-        with: { python-version: '3.x' }
-        
-      - name: Install CMake (Windows)
-        if: runner.os == 'Windows'
-        run: pip install cmake --upgrade
-
-      - name: Setup Vcpkg
-        shell: bash
-        run: |
-          if [ -n "$VCPKG_INSTALLATION_ROOT" ] && [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
-            echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
-          else
-            # Clone if not present (could be cached or pre-baked in future)
-            git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
-            if [[ "$RUNNER_OS" == "Windows" ]]; then
-              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"
-            else
-              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh"
-            fi
-            echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
-          fi
-
-      - name: Create Cache Dirs
-        shell: bash
-        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
-
-      # --- Caching ---
-      - name: Cache Vcpkg
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
-
-      # --- Build & Test ---
-      - name: Verify
-        shell: bash
-        env:
-          EXE_NAME: ${{ matrix.example.exe }}
-        run: |
-          TARGET_EXE="$EXE_NAME"
-          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
-          
-          python .github/scripts/verify_and_run.py \
-            --source "${{ matrix.example.source }}" \
-            --build "${{ matrix.example.source }}/build/preset-default" \
-            --exe "$TARGET_EXE"
+  # --- Phase 2: Run Tests (Depends on Phase 1) ---
+  run-tests:
+    needs: prepare-env
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      image-tag: ${{ needs.prepare-env.outputs.image-tag }}
+    secrets: inherit
