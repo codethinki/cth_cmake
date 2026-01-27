@@ -16,7 +16,6 @@ cth_glob_cpp(EXAMPLE_PUBLIC_SRC "incl")
 cth_glob_cpp(EXAMPLE_PRIVATE_SRC "src")
 
 find_package(range-v3 CONFIG REQUIRED)
-find_package(Gtest CONFIG REQUIRED)
 
 add_executable(basic_example_exec ${EXAMPLE_PUBLIC_SRC} ${EXAMPLE_PRIVATE_SRC})
 
