@@ -6,76 +6,68 @@ on:
   pull_request:
     paths-ignore: ['**.md']
 
+env:
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+
 jobs:
-  test:
-    name: test / ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
+  basic:
+    name: basic / ${{ matrix.config.os }} / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        example:
-          - name: basic
-            source: examples/basic
-            exe: basic_example_exec
-          - name: modules
-            source: examples/modules
-            exe: modules_executable
         config:
           - { os: windows-latest, compiler: msvc }
           - { os: ubuntu-latest, compiler: gcc }
           - { os: ubuntu-latest, compiler: clang }
-
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Tools (Linux)
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build build-essential software-properties-common
           
-          # Install GCC 15
+          # GCC
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install -y gcc-15 g++-15
           
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+            sudo apt-get install -y gcc-15 g++-15
             echo "CC=gcc-15" >> $GITHUB_ENV
             echo "CXX=g++-15" >> $GITHUB_ENV
           fi
 
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-            # Install LLVM/Clang 21
             wget https://apt.llvm.org/llvm.sh
             chmod +x llvm.sh
-            sudo ./llvm.sh 21
-            echo "CC=clang-21" >> $GITHUB_ENV
-            echo "CXX=clang++-21" >> $GITHUB_ENV
+            # Attempting to install Clang 21, verifying it's available
+            sudo ./llvm.sh 21 || sudo ./llvm.sh 20
+            
+            # Check what got installed
+            if command -v clang-21 &> /dev/null; then
+               echo "CC=clang-21" >> $GITHUB_ENV
+               echo "CXX=clang++-21" >> $GITHUB_ENV
+            else
+               echo "CC=clang-20" >> $GITHUB_ENV
+               echo "CXX=clang++-20" >> $GITHUB_ENV
+            fi
           fi
 
-      - name: Setup MSVC (Windows)
+      - name: Setup MSVC
         if: matrix.config.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install Latest CMake
-        run: pip install cmake --upgrade
+      - uses: actions/setup-python@v4
+        with: { python-version: '3.x' }
+        
+      - run: pip install cmake --upgrade
 
       - name: Restore Vcpkg (Windows)
         if: runner.os == 'Windows'
-        run: |
-          if ($env:VCPKG_INSTALLATION_ROOT) {
-              echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
-          }
+        run: if ($env:VCPKG_INSTALLATION_ROOT) { echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV }
 
       - name: Restore Vcpkg (Linux)
         if: runner.os == 'Linux'
@@ -88,31 +80,116 @@ jobs:
               echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
           fi
 
-      - name: Create Vcpkg Cache Dir
-        shell: bash
-        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
-
-      - name: Cache Vcpkg Binaries
+      - name: Cache Vcpkg
         uses: actions/cache@v4
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          # Cache key includes compiler and vcpkg.json content to invalidate on changes
           key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
+          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
 
-      - name: Configure, Build, Verify & Run
+      - name: Create Cache Dir
+        shell: bash
+        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+
+      - name: Verify
         shell: bash
         env:
-          EXE_NAME: ${{ matrix.example.exe }}
+          EXE_NAME: basic_example_exec
         run: |
-          # Append .exe extension for Windows if needed
           TARGET_EXE="$EXE_NAME"
-          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
-            TARGET_EXE="${EXE_NAME}.exe"
-          fi
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
 
           python .github/scripts/verify_and_run.py \
-            --source "${{ matrix.example.source }}" \
-            --build "${{ matrix.example.source }}/build/preset-default" \
+            --source "examples/basic" \
+            --build "examples/basic/build/preset-default" \
+            --exe "$TARGET_EXE"
+
+  modules:
+    name: modules / ${{ matrix.config.os }} / ${{ matrix.config.compiler }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: windows-latest, compiler: msvc }
+          - { os: ubuntu-latest, compiler: gcc }
+          - { os: ubuntu-latest, compiler: clang }
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Tools (Linux)
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build build-essential software-properties-common
+          
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          
+          if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+            sudo apt-get install -y gcc-15 g++-15
+            echo "CC=gcc-15" >> $GITHUB_ENV
+            echo "CXX=g++-15" >> $GITHUB_ENV
+          fi
+
+          if [ "${{ matrix.config.compiler }}" = "clang" ]; then
+            wget https://apt.llvm.org/llvm.sh
+            chmod +x llvm.sh
+            sudo ./llvm.sh 21 || sudo ./llvm.sh 20
+            
+            if command -v clang-21 &> /dev/null; then
+               echo "CC=clang-21" >> $GITHUB_ENV
+               echo "CXX=clang++-21" >> $GITHUB_ENV
+            else
+               echo "CC=clang-20" >> $GITHUB_ENV
+               echo "CXX=clang++-20" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Setup MSVC
+        if: matrix.config.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: actions/setup-python@v4
+        with: { python-version: '3.x' }
+        
+      - run: pip install cmake --upgrade
+
+      - name: Restore Vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: if ($env:VCPKG_INSTALLATION_ROOT) { echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV }
+
+      - name: Restore Vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          if [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
+              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          else
+              git clone https://github.com/microsoft/vcpkg.git $GITHUB_WORKSPACE/vcpkg
+              $GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh
+              echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
+          fi
+
+      - name: Cache Vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
+      
+      - name: Create Cache Dir
+        shell: bash
+        run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+        
+      - name: Verify
+        shell: bash
+        env:
+          EXE_NAME: modules_executable
+        run: |
+          TARGET_EXE="$EXE_NAME"
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
+
+          python .github/scripts/verify_and_run.py \
+            --source "examples/modules" \
+            --build "examples/modules/build/preset-default" \
             --exe "$TARGET_EXE"
