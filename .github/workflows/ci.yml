@@ -26,36 +26,40 @@ jobs:
             exe: modules_executable
         config:
           - { os: windows-latest, compiler: msvc }
-          - { os: ubuntu-latest, compiler: gcc }
-          - { os: ubuntu-latest, compiler: clang }
+          - { os: ubuntu-latest, compiler: gcc, container: "cachyos/cachyos:latest" }
+          - { os: ubuntu-latest, compiler: clang, container: "cachyos/cachyos:latest" }
+
+    container: ${{ matrix.config.container }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # --- Setup Tools (Linux) ---
-      - name: Setup Tools (Linux)
+      # --- Setup Tools (Linux Container) ---
+      - name: Setup Tools (Linux Container)
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build build-essential software-properties-common wget
+          # CachyOS (Arch) uses pacman.
+          # Update first
+          pacman -Syu --noconfirm
           
-          # GCC
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
+          # Install base tools + cmake/ninja/git/python
+          # 'base-devel' includes gcc, make, etc.
+          pacman -S --noconfirm base-devel cmake ninja git python python-pip wget
+          
+          # Force break managed environment if needed for pip
+          rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
+          
+          # Install compilers specifically
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-14 g++-14
-            echo "CC=gcc-14" >> $GITHUB_ENV
-            echo "CXX=g++-14" >> $GITHUB_ENV
+             # gcc is already in base-devel, but being explicit is fine
+             pacman -S --noconfirm gcc
+             echo "CC=gcc" >> $GITHUB_ENV
+             echo "CXX=g++" >> $GITHUB_ENV
           fi
-
-          # Clang
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-            wget https://apt.llvm.org/llvm.sh -O llvm.sh
-            chmod +x llvm.sh
-            # Use Clang 19 for stability
-            sudo ./llvm.sh 19
-            echo "CC=clang-19" >> $GITHUB_ENV
-            echo "CXX=clang++-19" >> $GITHUB_ENV
+             pacman -S --noconfirm clang llvm
+             echo "CC=clang" >> $GITHUB_ENV
+             echo "CXX=clang++" >> $GITHUB_ENV
           fi
 
       # --- Setup Tools (Windows) ---
@@ -64,10 +68,13 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       # --- Common Setup ---
-      - uses: actions/setup-python@v4
+      # Windows needs explicit Python setup. Containers have it from apt.
+      - name: Setup Python (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-python@v4
         with: { python-version: '3.x' }
         
-      - run: pip install cmake --upgrade
+      - run: pip install cmake --upgrade --break-system-packages
 
       - name: Setup Vcpkg
         shell: bash
