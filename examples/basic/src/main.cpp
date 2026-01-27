@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <numeric>
 #include <vector>
+#include <print>
 
 int main() {
     static_assert(do_something() != 0, "test assertion");

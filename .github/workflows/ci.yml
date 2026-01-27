@@ -12,7 +12,7 @@ env:
 
 jobs:
   basic:
-    name: basic / ${{ matrix.config.os }} / ${{ matrix.config.compiler }}
+    name: basic / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -35,25 +35,19 @@ jobs:
           sudo apt-get update
           
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-15 g++-15
-            echo "CC=gcc-15" >> $GITHUB_ENV
-            echo "CXX=g++-15" >> $GITHUB_ENV
+            sudo apt-get install -y gcc-14 g++-14
+            echo "CC=gcc-14" >> $GITHUB_ENV
+            echo "CXX=g++-14" >> $GITHUB_ENV
           fi
 
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
             wget https://apt.llvm.org/llvm.sh
             chmod +x llvm.sh
-            # Attempting to install Clang 21, verifying it's available
-            sudo ./llvm.sh 21 || sudo ./llvm.sh 20
+            # Use stable versions available in 24.04 era (18/19)
+            sudo ./llvm.sh 19
             
-            # Check what got installed
-            if command -v clang-21 &> /dev/null; then
-               echo "CC=clang-21" >> $GITHUB_ENV
-               echo "CXX=clang++-21" >> $GITHUB_ENV
-            else
-               echo "CC=clang-20" >> $GITHUB_ENV
-               echo "CXX=clang++-20" >> $GITHUB_ENV
-            fi
+            echo "CC=clang-19" >> $GITHUB_ENV
+            echo "CXX=clang++-19" >> $GITHUB_ENV
           fi
 
       - name: Setup MSVC
@@ -105,7 +99,7 @@ jobs:
             --exe "$TARGET_EXE"
 
   modules:
-    name: modules / ${{ matrix.config.os }} / ${{ matrix.config.compiler }}
+    name: modules / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -127,23 +121,18 @@ jobs:
           sudo apt-get update
           
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-15 g++-15
-            echo "CC=gcc-15" >> $GITHUB_ENV
-            echo "CXX=g++-15" >> $GITHUB_ENV
+            sudo apt-get install -y gcc-14 g++-14
+            echo "CC=gcc-14" >> $GITHUB_ENV
+            echo "CXX=g++-14" >> $GITHUB_ENV
           fi
 
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
             wget https://apt.llvm.org/llvm.sh
             chmod +x llvm.sh
-            sudo ./llvm.sh 21 || sudo ./llvm.sh 20
+            sudo ./llvm.sh 19
             
-            if command -v clang-21 &> /dev/null; then
-               echo "CC=clang-21" >> $GITHUB_ENV
-               echo "CXX=clang++-21" >> $GITHUB_ENV
-            else
-               echo "CC=clang-20" >> $GITHUB_ENV
-               echo "CXX=clang++-20" >> $GITHUB_ENV
-            fi
+            echo "CC=clang-19" >> $GITHUB_ENV
+            echo "CXX=clang++-19" >> $GITHUB_ENV
           fi
 
       - name: Setup MSVC
