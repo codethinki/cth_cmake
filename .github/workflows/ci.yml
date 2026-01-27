@@ -26,41 +26,35 @@ jobs:
             exe: modules_executable
         config:
           - { os: windows-latest, compiler: msvc }
-          - { os: ubuntu-latest, compiler: gcc, container: "cachyos/cachyos:latest" }
-          - { os: ubuntu-latest, compiler: clang, container: "cachyos/cachyos:latest" }
+          # Using dynamic reference to the container image built in this repo
+          - { os: ubuntu-latest, compiler: gcc, container: "ghcr.io/${{ github.repository_owner }}/cth-ci-env:latest" }
+          - { os: ubuntu-latest, compiler: clang, container: "ghcr.io/${{ github.repository_owner }}/cth-ci-env:latest" }
 
-    container: ${{ matrix.config.container }}
+    # Container is used if defined in matrix (Linux legs), ignored otherwise (Windows)
+    container: 
+      image: ${{ matrix.config.container }}
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # --- Setup Tools (Linux / CachyOS) ---
-      - name: Setup Tools (Linux)
+      # --- Configure Environment (Linux) ---
+      - name: Configure Linux Env
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
-          # Update keyrings & system
-          pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
-          pacman -Su --noconfirm
-          
-          # Install base tools + cmake/ninja/git/python + vcpkg deps
-          pacman -S --noconfirm --needed base-devel cmake ninja git python python-pip wget curl zip unzip tar
-          
-          # Force break managed environment for pip
-          rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
-          
-          # Install compilers
+          # Set compilers based on matrix
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-             pacman -S --noconfirm --needed gcc
              echo "CC=gcc" >> $GITHUB_ENV
              echo "CXX=g++" >> $GITHUB_ENV
           fi
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-             pacman -S --noconfirm --needed clang llvm
              echo "CC=clang" >> $GITHUB_ENV
              echo "CXX=clang++" >> $GITHUB_ENV
           fi
           
-          # Force Vcpkg to use system binaries
+          # Force Vcpkg to use system binaries (curl, zip, etc) provided by the container
           echo "VCPKG_FORCE_SYSTEM_BINARIES=1" >> $GITHUB_ENV
 
       # --- Setup Tools (Windows) ---
@@ -74,7 +68,9 @@ jobs:
         uses: actions/setup-python@v4
         with: { python-version: '3.x' }
         
-      - run: pip install cmake --upgrade --break-system-packages
+      - name: Install CMake (Windows)
+        if: runner.os == 'Windows'
+        run: pip install cmake --upgrade
 
       - name: Setup Vcpkg
         shell: bash
@@ -82,6 +78,7 @@ jobs:
           if [ -n "$VCPKG_INSTALLATION_ROOT" ] && [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
             echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           else
+            # Clone if not present (could be cached or pre-baked in future)
             git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
             if [[ "$RUNNER_OS" == "Windows" ]]; then
               "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"
