@@ -1,10 +1,22 @@
-name: Run Tests
+name: Run Example
 
 on:
   workflow_call:
     inputs:
       image-tag:
         description: "Docker image tag for Linux environment"
+        required: true
+        type: string
+      example-name:
+        description: "Name of the example (for display)"
+        required: true
+        type: string
+      source-dir:
+        description: "Source directory (e.g. examples/basic)"
+        required: true
+        type: string
+      exe-name:
+        description: "Expected executable name"
         required: true
         type: string
 
@@ -14,18 +26,12 @@ env:
 
 jobs:
   test:
-    name: ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
+    # Example: "basic / gcc"
+    name: ${{ inputs.example-name }} / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        example:
-          - name: basic
-            source: examples/basic
-            exe: basic_example_exec
-          - name: modules
-            source: examples/modules
-            exe: modules_executable
         config:
           - { os: windows-latest, compiler: msvc }
           - { os: ubuntu-latest, compiler: gcc, container: "linux-container" }
@@ -98,12 +104,12 @@ jobs:
       - name: Verify
         shell: bash
         env:
-          EXE_NAME: ${{ matrix.example.exe }}
+          EXE_NAME: ${{ inputs.exe-name }}
         run: |
           TARGET_EXE="$EXE_NAME"
           if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
           
           python .github/scripts/verify_and_run.py \
-            --source "${{ matrix.example.source }}" \
-            --build "${{ matrix.example.source }}/build/preset-default" \
+            --source "${{ inputs.source-dir }}" \
+            --build "${{ inputs.source-dir }}/build/preset-default" \
             --exe "$TARGET_EXE"
