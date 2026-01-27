@@ -1,4 +1,7 @@
 # cth cmake
+
+[![Tests](https://github.com/codethinki/cth_cmake/actions/workflows/ci.yml/badge.svg)](https://github.com/codethinki/cth_cmake/actions/workflows/ci.yml)
+
 This is an opinionated cross-platform c++ cmake utility library to enable quicker and safer use of cmake. 
 
 **VERY PRE ALPHA CURRENTLY, DONT EXPECT BACKWARDS COMPATIBILITY**
@@ -20,7 +23,7 @@ Requirements [(guide)](#dependencies--installation):
 
 ## cth_assertions
 Simple assertions that every language should have:
-  - `cth_assert_if[_not]` — check boolean conditions and fail configuration when the condition is (not) met.
+  - `cth_assert_true` / `cth_assert_false` — check boolean conditions and fail configuration when the condition is (not) met.
   - `cth_assert_[_not]_cmd` — verify a CMake command/function is (not) present and fail on mismatch.
   - `cth_assert_[_not]_target` — assert a CMake target does (not) exists in the current scope.
   - `cth_assert_[_not]_empty` — assert a string value is (not) empty.

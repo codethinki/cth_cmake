@@ -37,11 +37,11 @@ macro(_cth_assertion_failure reason)
 endmacro()
 
 #[[.rst:
-.. command:: cth_assert_if
+.. command:: cth_assert_true
 
    .. code-block:: cmake
 
-      cth_assert_if(<condition...> REASON <reason>)
+      cth_assert_true(<condition...> REASON <reason>)
 
    Asserts that a boolean condition evaluates to TRUE, terminating configuration otherwise.
 
@@ -54,7 +54,7 @@ endmacro()
    :post: condition evaluates to TRUE, or configuration terminates with FATAL_ERROR
 
 #]]
-function(cth_assert_if)
+function(cth_assert_true)
     set(oneValueArgs REASON)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
     
@@ -64,11 +64,11 @@ function(cth_assert_if)
 endfunction()
 
 #[[.rst:
-.. command:: cth_assert_if_not
+.. command:: cth_assert_false
 
    .. code-block:: cmake
 
-      cth_assert_if_not(<condition...> REASON <reason>)
+      cth_assert_false(<condition...> REASON <reason>)
 
    Asserts that a boolean condition evaluates to FALSE, terminating configuration otherwise.
 
@@ -81,7 +81,7 @@ endfunction()
    :post: condition evaluates to FALSE, or configuration terminates with FATAL_ERROR
 
 #]]
-function(cth_assert_if_not)
+function(cth_assert_false)
     set(oneValueArgs REASON)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
     
@@ -106,7 +106,7 @@ endfunction()
 
 #]]
 function(cth_assert_not_cmd cmd)
-    cth_assert_if_not(COMMAND ${cmd} REASON "Command '${cmd}' already defined")
+    cth_assert_false(COMMAND ${cmd} REASON "Command '${cmd}' already defined")
 endfunction()
 
 #[[.rst:
@@ -125,7 +125,7 @@ endfunction()
 
 #]]
 function(cth_assert_cmd cmd)
-    cth_assert_if(COMMAND ${cmd} REASON "Command '${cmd}' not defined")
+    cth_assert_true(COMMAND ${cmd} REASON "Command '${cmd}' not defined")
 endfunction()
 
 #[[.rst:
@@ -144,7 +144,7 @@ endfunction()
 
 #]]
 function(cth_assert_target target)
-    cth_assert_if(TARGET ${target} REASON "Target '${target}' does not exist")
+    cth_assert_true(TARGET ${target} REASON "Target '${target}' does not exist")
 endfunction()
 
 #[[.rst:
@@ -163,7 +163,7 @@ endfunction()
 
 #]]
 function(cth_assert_not_target target)
-    cth_assert_if_not(TARGET ${target} REASON "Target '${target}' already exists")
+    cth_assert_false(TARGET ${target} REASON "Target '${target}' already exists")
 endfunction()
 
 #[[.rst:
@@ -235,7 +235,7 @@ function(cth_assert_program prog)
     
     find_program(${VAR_NAME} "${prog}" ${ARGN})
     
-    cth_assert_if(${VAR_NAME} REASON "Program '${prog}' not found")
+    cth_assert_true(${VAR_NAME} REASON "Program '${prog}' not found")
     
     set(${VAR_NAME} "${${VAR_NAME}}" PARENT_SCOPE)
 endfunction()
