@@ -1,0 +1,26 @@
+name: Example - Modules
+
+on:
+  push:
+    paths:
+      - 'examples/modules/**'
+      - '.github/workflows/example-modules.yml'
+      - '.github/workflows/reusable-test.yml'
+      - 'cth_*.cmake'
+      - 'toolchain.cmake'
+  pull_request:
+    paths:
+      - 'examples/modules/**'
+      - '.github/workflows/example-modules.yml'
+      - '.github/workflows/reusable-test.yml'
+      - 'cth_*.cmake'
+      - 'toolchain.cmake'
+
+jobs:
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      source_dir: examples/modules
+      build_dir: examples/modules/build/preset-default
+      exe_path_windows: examples/modules/build/preset-default/Release/modules_executable.exe
+      exe_path_unix: examples/modules/build/preset-default/modules_executable

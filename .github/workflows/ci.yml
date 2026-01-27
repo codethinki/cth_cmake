@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            compiler: msvc
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup tools (Linux)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3-pip build-essential
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y clang
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Ensure CMake is available
+        run: cmake --version
+
+      - name: Verify basic example
+        env:
+          EXE_PATH_WINDOWS: examples/basic/build/preset-default/Release/basic_example_exec.exe
+          EXE_PATH_UNIX: examples/basic/build/preset-default/basic_example_exec
+        run: |
+          python .github/scripts/verify_and_run.py \
+            --source examples/basic \
+            --build examples/basic/build/preset-default \
+            --exe "${{ matrix.os == 'windows-latest' && env.EXE_PATH_WINDOWS || env.EXE_PATH_UNIX }}"
+
+      - name: Verify modules example
+        env:
+          EXE_PATH_WINDOWS: examples/modules/build/preset-default/Release/modules_executable.exe
+          EXE_PATH_UNIX: examples/modules/build/preset-default/modules_executable
+        run: |
+          python .github/scripts/verify_and_run.py \
+            --source examples/modules \
+            --build examples/modules/build/preset-default \
+            --exe "${{ matrix.os == 'windows-latest' && env.EXE_PATH_WINDOWS || env.EXE_PATH_UNIX }}"

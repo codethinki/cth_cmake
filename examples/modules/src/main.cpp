@@ -1,5 +1,6 @@
 import test;
 
 int main() {
-    return acc(random_data(10));
+    std::println("{}", acc(random_data(10)));
+    return 0;
 }

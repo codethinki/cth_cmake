@@ -1,0 +1,112 @@
+name: Reusable Build & Test
+
+on:
+  workflow_call:
+    inputs:
+      source_dir:
+        required: true
+        type: string
+      build_dir:
+        required: true
+        type: string
+      exe_path_windows:
+        required: true
+        type: string
+      exe_path_unix:
+        required: true
+        type: string
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} / ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            compiler: msvc
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Tools (Linux)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build build-essential
+          
+          # Install latest CMake (apt might be old, but we try standard first or snap)
+          # In 2026, apt might be new enough. If not, snap is an option: sudo snap install cmake --classic
+          sudo apt-get install -y cmake 
+
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y clang
+          fi
+
+      - name: Setup MSVC (Windows)
+        if: matrix.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Restore Vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Use the pre-installed vcpkg if available, but for consistency in this example
+          # checking if VCPKG_INSTALLATION_ROOT is set.
+          if ($env:VCPKG_INSTALLATION_ROOT) {
+              echo "Using system vcpkg at $env:VCPKG_INSTALLATION_ROOT"
+              echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          } else {
+              # Fallback to cloning if needed, or error out.
+              # Assuming GH runners have it.
+              echo "VCPKG_INSTALLATION_ROOT not found."
+          }
+
+      - name: Restore Vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # Check for vcpkg in standard location or install
+          if [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
+              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          else
+              # Clone if missing
+              git clone https://github.com/microsoft/vcpkg.git $GITHUB_WORKSPACE/vcpkg
+              $GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh
+              echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
+          fi
+
+      - name: Create Vcpkg Cache Dir
+        run: mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+        shell: bash
+
+      - name: Cache Vcpkg Binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('**/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ matrix.compiler }}-
+
+      - name: Verify & Run
+        env:
+          EXE_PATH_WINDOWS: ${{ inputs.exe_path_windows }}
+          EXE_PATH_UNIX: ${{ inputs.exe_path_unix }}
+        run: |
+          python .github/scripts/verify_and_run.py \
+            --source "${{ inputs.source_dir }}" \
+            --build "${{ inputs.build_dir }}" \
+            --exe "${{ matrix.os == 'windows-latest' && env.EXE_PATH_WINDOWS || env.EXE_PATH_UNIX }}"

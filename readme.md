@@ -1,4 +1,8 @@
 # cth cmake
+
+[![Example - Basic](https://github.com/codethinki/cth_cmake/actions/workflows/example-basic.yml/badge.svg)](https://github.com/codethinki/cth_cmake/actions/workflows/example-basic.yml)
+[![Example - Modules](https://github.com/codethinki/cth_cmake/actions/workflows/example-modules.yml/badge.svg)](https://github.com/codethinki/cth_cmake/actions/workflows/example-modules.yml)
+
 This is an opinionated cross-platform c++ cmake utility library to enable quicker and safer use of cmake. 
 
 **VERY PRE ALPHA CURRENTLY, DONT EXPECT BACKWARDS COMPATIBILITY**

@@ -19,5 +19,6 @@ int main() {
     for(auto const& x : ranges::views::concat(someDoubleVec, someIntVec))
         sum += x;
 
-    return sum;
+    std::println("{}", sum);
+    return 0;
 }
