@@ -69,19 +69,19 @@ jobs:
         
       - run: pip install cmake --upgrade
 
-      - name: Restore Vcpkg (Windows)
-        if: runner.os == 'Windows'
-        run: if ($env:VCPKG_INSTALLATION_ROOT) { echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV }
-
-      - name: Restore Vcpkg (Linux)
-        if: runner.os == 'Linux'
+      - name: Setup Vcpkg
+        shell: bash
         run: |
-          if [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
-              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          if [ -n "$VCPKG_INSTALLATION_ROOT" ] && [ -d "$VCPKG_INSTALLATION_ROOT" ]; then
+            echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           else
-              git clone https://github.com/microsoft/vcpkg.git $GITHUB_WORKSPACE/vcpkg
-              $GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh
-              echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
+            git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
+            if [[ "$RUNNER_OS" == "Windows" ]]; then
+              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.bat"
+            else
+              "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh"
+            fi
+            echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_ENV
           fi
 
       - name: Create Cache Dirs
