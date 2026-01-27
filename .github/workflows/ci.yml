@@ -9,9 +9,9 @@ on:
 env:
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
-      # Force vcpkg to use the system binaries we install (zip, curl, etc) 
-      # instead of trying to download them (which often fails in containers)
-      VCPKG_FORCE_SYSTEM_BINARIES: 1
+
+jobs:
+  test:
     name: ${{ matrix.example.name }} / ${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     strategy:
@@ -39,34 +39,36 @@ env:
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
           # CachyOS (Arch) uses pacman.
-          # Update first
-          pacman -Syu --noconfirm
+          # Update keyrings first to avoid signature errors
+          pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
+          pacman -Su --noconfirm
           
-          # Install base tools + cmake/ninja/git/python
+          # Install base tools + cmake/ninja/git/python + vcpkg deps
           # 'base-devel' includes gcc, make, etc.
           # vcpkg needs: curl zip unzip tar
-          pacman -S --noconfirm base-devel cmake ninja git python python-pip wget curl zip unzip tar
+          pacman -S --noconfirm --needed base-devel cmake ninja git python python-pip wget curl zip unzip tar
           
-          # Debug: Verify tools are found
-          echo "Zip location: $(which zip)"
-          echo "Unzip location: $(which unzip)"
-          zip --version | head -n 1
+          # Verify zip is found (debugging)
+          which zip
+          zip --version
           
           # Force break managed environment if needed for pip
           rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
           
           # Install compilers specifically
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-             # gcc is already in base-devel, but being explicit is fine
-             pacman -S --noconfirm gcc
+             pacman -S --noconfirm --needed gcc
              echo "CC=gcc" >> $GITHUB_ENV
              echo "CXX=g++" >> $GITHUB_ENV
           fi
           if [ "${{ matrix.config.compiler }}" = "clang" ]; then
-             pacman -S --noconfirm clang llvm
+             pacman -S --noconfirm --needed clang llvm
              echo "CC=clang" >> $GITHUB_ENV
              echo "CXX=clang++" >> $GITHUB_ENV
           fi
+          
+          # Set Vcpkg to use system binaries to avoid weird glibc mismatches
+          echo "VCPKG_FORCE_SYSTEM_BINARIES=1" >> $GITHUB_ENV
 
       # --- Setup Tools (Windows) ---
       - name: Setup MSVC
