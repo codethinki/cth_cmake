@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        description: "Docker image tag for Linux environment"
+        required: true
+        type: string
+
+jobs:
+  basic:
+    name: basic-example
+    uses: ./.github/workflows/run-example.yml
+    with:
+      image-tag: ${{ inputs.image-tag }}
+      example-name: "basic"
+      source-dir: "examples/basic"
+      exe-name: "basic_example_exec"
+    secrets: inherit
+
+  modules:
+    name: modules-example
+    uses: ./.github/workflows/run-example.yml
+    with:
+      image-tag: ${{ inputs.image-tag }}
+      example-name: "modules"
+      source-dir: "examples/modules"
+      exe-name: "modules_executable"
+    secrets: inherit

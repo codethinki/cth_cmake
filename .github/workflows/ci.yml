@@ -17,24 +17,10 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     secrets: inherit
 
-  # --- Phase 2: Run Tests (Parallel per Example) ---
-  
-  test-basic:
+  # --- Phase 2: Run Test Suite ---
+  test:
     needs: prepare-env
-    uses: ./.github/workflows/run-example.yml
+    uses: ./.github/workflows/test-suite.yml
     with:
       image-tag: ${{ needs.prepare-env.outputs.image-tag }}
-      example-name: "basic"
-      source-dir: "examples/basic"
-      exe-name: "basic_example_exec"
-    secrets: inherit
-
-  test-modules:
-    needs: prepare-env
-    uses: ./.github/workflows/run-example.yml
-    with:
-      image-tag: ${{ needs.prepare-env.outputs.image-tag }}
-      example-name: "modules"
-      source-dir: "examples/modules"
-      exe-name: "modules_executable"
     secrets: inherit
