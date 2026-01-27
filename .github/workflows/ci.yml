@@ -46,9 +46,9 @@ jobs:
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt-get update
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-            sudo apt-get install -y gcc-15 g++-15
-            echo "CC=gcc-15" >> $GITHUB_ENV
-            echo "CXX=g++-15" >> $GITHUB_ENV
+            sudo apt-get install -y gcc-14 g++-14
+            echo "CC=gcc-14" >> $GITHUB_ENV
+            echo "CXX=g++-14" >> $GITHUB_ENV
           fi
 
           # Clang
@@ -80,7 +80,16 @@ jobs:
           $out = "buildcache.zip"
           Invoke-WebRequest -Uri $url -OutFile $out
           Expand-Archive -Path $out -DestinationPath "C:\tools\buildcache" -Force
-          "C:\tools\buildcache\buildcache-windows" | Out-File -FilePath $env:GITHUB_PATH -Append
+          
+          # Check layout to determine correct path
+          if (Test-Path "C:\tools\buildcache\buildcache-windows\buildcache.exe") {
+             "C:\tools\buildcache\buildcache-windows" | Out-File -FilePath $env:GITHUB_PATH -Append
+          } elseif (Test-Path "C:\tools\buildcache\buildcache.exe") {
+             "C:\tools\buildcache" | Out-File -FilePath $env:GITHUB_PATH -Append
+          } else {
+             # Fallback: List dirs to debug
+             Get-ChildItem -Recurse "C:\tools\buildcache"
+          }
 
       # --- Common Setup ---
       - uses: actions/setup-python@v4
