@@ -9,9 +9,6 @@ on:
 env:
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
-  BUILDCACHE_DIR: ${{ github.workspace }}/.buildcache
-  # Configures buildcache to be wrapped by CMake
-  CTH_ENABLE_BUILDCACHE: "ON"
 
 jobs:
   test:
@@ -61,35 +58,10 @@ jobs:
             echo "CXX=clang++-19" >> $GITHUB_ENV
           fi
 
-          # Install BuildCache (Linux)
-          wget https://gitlab.com/bits-n-bites/buildcache/-/releases/v0.31.7/downloads/buildcache-linux-amd64.tar.gz
-          tar -xvf buildcache-linux-amd64.tar.gz
-          sudo cp buildcache-linux-amd64/buildcache /usr/local/bin/
-          rm -rf buildcache-linux-amd64 buildcache-linux-amd64.tar.gz
-
       # --- Setup Tools (Windows) ---
       - name: Setup MSVC
         if: matrix.config.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install BuildCache (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $url = "https://gitlab.com/bits-n-bites/buildcache/-/releases/v0.31.7/downloads/buildcache-windows.zip"
-          $out = "buildcache.zip"
-          Invoke-WebRequest -Uri $url -OutFile $out
-          Expand-Archive -Path $out -DestinationPath "C:\tools\buildcache" -Force
-          
-          # Check layout to determine correct path
-          if (Test-Path "C:\tools\buildcache\buildcache-windows\buildcache.exe") {
-             "C:\tools\buildcache\buildcache-windows" | Out-File -FilePath $env:GITHUB_PATH -Append
-          } elseif (Test-Path "C:\tools\buildcache\buildcache.exe") {
-             "C:\tools\buildcache" | Out-File -FilePath $env:GITHUB_PATH -Append
-          } else {
-             # Fallback: List dirs to debug
-             Get-ChildItem -Recurse "C:\tools\buildcache"
-          }
 
       # --- Common Setup ---
       - uses: actions/setup-python@v4
@@ -116,7 +88,6 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
-          mkdir -p "$BUILDCACHE_DIR"
 
       # --- Caching ---
       - name: Cache Vcpkg
@@ -126,14 +97,6 @@ jobs:
           key: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-${{ hashFiles('**/vcpkg.json') }}
           restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config.compiler }}-
 
-      - name: Cache BuildCache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.BUILDCACHE_DIR }}
-          key: buildcache-${{ runner.os }}-${{ matrix.config.compiler }}-${{ matrix.example.name }}-${{ github.sha }}
-          restore-keys: |
-            buildcache-${{ runner.os }}-${{ matrix.config.compiler }}-${{ matrix.example.name }}-
-
       # --- Build & Test ---
       - name: Verify
         shell: bash
@@ -142,15 +105,8 @@ jobs:
         run: |
           TARGET_EXE="$EXE_NAME"
           if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then TARGET_EXE="${EXE_NAME}.exe"; fi
-
-          # Configure buildcache env vars just to be safe, though handled by preset usually if integrated
-          export BUILDCACHE_DIR="$BUILDCACHE_DIR"
           
           python .github/scripts/verify_and_run.py \
             --source "${{ matrix.example.source }}" \
             --build "${{ matrix.example.source }}/build/preset-default" \
             --exe "$TARGET_EXE"
-            
-      - name: BuildCache Stats
-        shell: bash
-        run: buildcache -s
