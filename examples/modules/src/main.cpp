@@ -5,6 +5,7 @@ import test;
 
 
 int main() {
-    std::println("{}", acc(random_data(10)));
+    auto data = get_random_data(10);
+    std::println("{}", acc(data));
     return 0;
 }
