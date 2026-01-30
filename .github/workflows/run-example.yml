@@ -75,6 +75,9 @@ jobs:
       - name: Install CMake (Windows)
         if: runner.os == 'Windows'
         run: pip install cmake --upgrade
+      
+      - name: install ninja
+        run: pip install ninja --upgrade
 
       - name: Cache Vcpkg Tool (Windows)
         if: runner.os == 'Windows'
