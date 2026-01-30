@@ -210,8 +210,22 @@ endfunction()
 
 #[[.rst:
 .. command:: cth_assert_program
-   DEPRECATED
+
+   .. code-block:: cmake
+
+      cth_assert_program(<prog> [args...])
+
+   Asserts an external program exists.
+
+   :param prog: Name of the program to find
+   :type prog: string
+   :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
+   :type args: optional arguments
+
+   :post: program found or configuration terminates with FATAL_ERROR
 #]]
 function(cth_assert_program prog)
-   message(FATAL_ERROR "deprecated, use tool_utilites/cth_find_program instead")
+    find_program(TEMP "${prog}" ${ARGN})
+    
+    cth_assert_true(${VAR_NAME} REASON "Program '${prog}' not found")
 endfunction()
