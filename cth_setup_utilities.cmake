@@ -73,12 +73,3 @@ macro(cth_set_latest_c_cpp_standard)
 
    message("Set cxx standard to ${CMAKE_CXX_STANDARD}")
 endmacro()
-
-#[[.rst
-deprecated use
-.. code-block:: cmake
-      cth_set_latest_c_cpp_standard()
-#]]
-macro(cth_set_newest_c_cpp_standard)
-   message(WARNING "using deprecated 'cth_set_newest_c_cpp_standard', use 'cth_set_latest_c_cpp_standard' instead")
-endmacro()
