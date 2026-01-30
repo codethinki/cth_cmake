@@ -210,32 +210,8 @@ endfunction()
 
 #[[.rst:
 .. command:: cth_assert_program
-
-   .. code-block:: cmake
-
-      cth_assert_program(<prog> [args...])
-
-   Locates an external program and exports its path to the parent scope.
-
-   :param prog: Name of the program to find
-   :type prog: string
-   :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
-   :type args: optional arguments
-
-   :post: <PROG>_PROGRAM variable is set in PARENT_SCOPE with the full path to the program, or configuration terminates with FATAL_ERROR if not found
-
-   .. note::
-      The output variable name is the uppercase version of prog with "_PROGRAM" appended.
-      For example, ``cth_assert_program(git)`` sets ``GIT_PROGRAM``.
-
+   DEPRECATED
 #]]
 function(cth_assert_program prog)
-    string(TOUPPER "${prog}" PROG_UPPER)
-    set(VAR_NAME "${PROG_UPPER}_PROGRAM")
-    
-    find_program(${VAR_NAME} "${prog}" ${ARGN})
-    
-    cth_assert_true(${VAR_NAME} REASON "Program '${prog}' not found")
-    
-    set(${VAR_NAME} "${${VAR_NAME}}" PARENT_SCOPE)
+   message(FATAL_ERROR "deprecated, use tool_utilites/cth_find_program instead")
 endfunction()
