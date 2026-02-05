@@ -98,18 +98,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_cmd(<cmd>)
+      cth_assert_not_cmd(<cmd> [REASON <reason>])
 
    Asserts that a CMake command, function, or macro is NOT defined.
 
    :param cmd: Name of the command to check
    :type cmd: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: cmd is NOT a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_not_cmd cmd)
-    cth_assert_false(COMMAND ${cmd} REASON "Command '${cmd}' already defined")
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Command '${cmd}' already defined")
+    endif()
+    
+    cth_assert_false(COMMAND ${cmd} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -117,18 +126,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_cmd(<cmd>)
+      cth_assert_cmd(<cmd> [REASON <reason>])
 
    Asserts that a CMake command, function, or macro is defined.
 
    :param cmd: Name of the command to check
    :type cmd: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: cmd is a defined command/function/macro, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_cmd cmd)
-    cth_assert_true(COMMAND ${cmd} REASON "Command '${cmd}' not defined")
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Command '${cmd}' not defined")
+    endif()
+    
+    cth_assert_true(COMMAND ${cmd} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -136,18 +154,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_target(<target>)
+      cth_assert_target(<target> [REASON <reason>])
 
    Asserts that a CMake target exists in the current scope.
 
    :param target: Name of the target to check
    :type target: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: target exists, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_target target)
-    cth_assert_true(TARGET ${target} REASON "Target '${target}' does not exist")
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Target '${target}' does not exist")
+    endif()
+    
+    cth_assert_true(TARGET ${target} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -155,18 +182,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_target(<target>)
+      cth_assert_not_target(<target> [REASON <reason>])
 
    Asserts that a CMake target does NOT exist in the current scope.
 
    :param target: Name of the target to check
    :type target: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: target does NOT exist, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_not_target target)
-    cth_assert_false(TARGET ${target} REASON "Target '${target}' already exists")
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Target '${target}' already exists")
+    endif()
+    
+    cth_assert_false(TARGET ${target} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -174,19 +210,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_empty(<value>)
+      cth_assert_empty(<value> [REASON <reason>])
 
    Asserts that a value is an empty string.
 
    :param value: Value to check for emptiness
    :type value: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: value is an empty string, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_empty value)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
     if(NOT ("${value}" STREQUAL ""))
-        _cth_assertion_failure("Value not empty: '${value}'")
+        if(NOT ARG_REASON)
+            set(ARG_REASON "Value not empty: '${value}'")
+        endif()
+        _cth_assertion_failure("${ARG_REASON}")
     endif()
 endfunction()
 
@@ -195,19 +239,27 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_empty(<value>)
+      cth_assert_not_empty(<value> [REASON <reason>])
 
    Asserts that a value is NOT an empty string.
 
    :param value: Value to check for non-emptiness
    :type value: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
 
    :post: value is NOT an empty string, or configuration terminates with FATAL_ERROR
 
 #]]
 function(cth_assert_not_empty value)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    
     if("${value}" STREQUAL "")
-        _cth_assertion_failure("Value is empty")
+        if(NOT ARG_REASON)
+            set(ARG_REASON "Value is empty")
+        endif()
+        _cth_assertion_failure("${ARG_REASON}")
     endif()
 endfunction()
 
@@ -216,19 +268,28 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_program(<prog> [args...])
+      cth_assert_program(<prog> [REASON <reason>] [args...])
 
    Asserts an external program exists.
 
    :param prog: Name of the program to find
    :type prog: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
    :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
    :type args: optional arguments
 
    :post: program found or configuration terminates with FATAL_ERROR
 #]]
 function(cth_assert_program prog)
-    find_program(TEMP "${prog}" ${ARGN})
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
     
-    cth_assert_true(${VAR_NAME} REASON "Program '${prog}' not found")
+    find_program(TEMP "${prog}" ${ARG_UNPARSED_ARGUMENTS})
+    
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Program '${prog}' not found")
+    endif()
+    
+    cth_assert_true(${VAR_NAME} REASON "${ARG_REASON}")
 endfunction()

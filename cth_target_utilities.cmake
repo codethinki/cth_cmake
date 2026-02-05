@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Lukas Thomann
 # Licensed under the MIT License
 
+include(cth_assertions.cmake)
+
 #[[.rst:
 .. command:: cth_glob
 
@@ -375,15 +377,19 @@ endfunction()
       - Create a .clang-format file in your project root to define formatting style
 
 #]]
-function(cth_add_clang_format_target)
+function(cth_add_clang_format_target TARGET_NAME)
+    cth_assert_not_empty(${TARGET_NAME} REASON "add_clang_format_target requires a target name")
+
     include(cth_tool_utilities.cmake)
     cth_find_clang_format()
 
     set(FILES_TO_FORMAT ${ARGN})
 
-    # 3. Create the custom target "format"
+    
+
+
     add_custom_target(
-        format
+        ${TARGET_NAME}
         COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${FILES_TO_FORMAT}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting all source files with clang-format..."
