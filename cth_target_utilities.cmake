@@ -380,7 +380,7 @@ endfunction()
 function(cth_add_clang_format_target TARGET_NAME)
     cth_assert_not_empty(${TARGET_NAME} REASON "add_clang_format_target requires a target name")
 
-    include(cth_tool_utilities.cmake)
+    include(cth_tool_utilities)
     cth_find_clang_format()
 
     set(FILES_TO_FORMAT ${ARGN})
