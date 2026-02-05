@@ -8,14 +8,14 @@ include(cth_assertions)
 
    .. code-block:: cmake
 
-      cth_glob(<out_var> <sub_path> [PATTERNS <patterns...>])
+      cth_glob(<out_var> <sub_paths...> [PATTERNS <patterns...>])
 
-   Recursively globs for files matching specified patterns in a subdirectory.
+   Recursively globs for files matching specified patterns in one or more subdirectories.
 
    :param out_var: Variable to append found files to
    :type out_var: string
-   :param sub_path: Subdirectory path to search within
-   :type sub_path: string
+   :param sub_paths: One or more subdirectory paths to search within
+   :type sub_paths: string or list of strings
    :param PATTERNS: List of file patterns to match (e.g., "*.cpp", "*.hpp")
    :type PATTERNS: list of strings
 
@@ -24,15 +24,20 @@ include(cth_assertions)
    .. note::
       Uses GLOB_RECURSE with CONFIGURE_DEPENDS to ensure CMake re-runs if files change.
       Results are appended to out_var, preserving any existing content.
+      When multiple paths are provided, all paths are searched and results are combined.
 
 #]]
-function(cth_glob OUT_VAR SUB_PATH)
+function(cth_glob OUT_VAR)
     set(multiValueArgs PATTERNS)
-    cmake_parse_arguments(PARSE_ARGV 2 ARG "" "" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "${multiValueArgs}")
+
+    set(SUB_PATHS ${ARG_UNPARSED_ARGUMENTS})
 
     set(GLOB_PATTERNS "")
-    foreach(PATTERN IN LISTS ARG_PATTERNS)
-        list(APPEND GLOB_PATTERNS "${SUB_PATH}/${PATTERN}")
+    foreach(SUB_PATH IN LISTS SUB_PATHS)
+        foreach(PATTERN IN LISTS ARG_PATTERNS)
+            list(APPEND GLOB_PATTERNS "${SUB_PATH}/${PATTERN}")
+        endforeach()
     endforeach()
 
     if(GLOB_PATTERNS)
@@ -49,23 +54,24 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_glob_cpp(<out_var> <sub_path>)
+      cth_glob_cpp(<out_var> <sub_paths...>)
 
-   Recursively globs for common C++ source and header files in a subdirectory.
+   Recursively globs for common C++ source and header files in one or more subdirectories.
 
    :param out_var: Variable to append found files to
    :type out_var: string
-   :param sub_path: Subdirectory path to search within
-   :type sub_path: string
+   :param sub_paths: One or more subdirectory paths to search within
+   :type sub_paths: string or list of strings
 
    :post: out_var contains the list of found files appended to existing content
 
    .. note::
       Searches for files with extensions: .cpp, .hpp, .inl
+      When multiple paths are provided, all paths are searched and results are combined.
 
 #]]
-function(cth_glob_cpp OUT_VAR SUB_PATH)
-    cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cpp" "*.hpp" "*.inl")
+function(cth_glob_cpp OUT_VAR)
+    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cpp" "*.hpp" "*.inl")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
@@ -75,23 +81,24 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_glob_cppm(<out_var> <sub_path>)
+      cth_glob_cppm(<out_var> <sub_paths...>)
 
-   Recursively globs for C++ module interface files in a subdirectory.
+   Recursively globs for C++ module interface files in one or more subdirectories.
 
    :param out_var: Variable to append found files to
    :type out_var: string
-   :param sub_path: Subdirectory path to search within
-   :type sub_path: string
+   :param sub_paths: One or more subdirectory paths to search within
+   :type sub_paths: string or list of strings
 
    :post: out_var contains the list of found files appended to existing content
 
    .. note::
       Searches for files with extension: .cppm (C++ module interface files)
+      When multiple paths are provided, all paths are searched and results are combined.
 
 #]]
-function(cth_glob_cppm OUT_VAR SUB_PATH)
-    cth_glob(${OUT_VAR} "${SUB_PATH}" PATTERNS "*.cppm")
+function(cth_glob_cppm OUT_VAR)
+    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cppm")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
@@ -102,39 +109,44 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_add_resources(<target_name> <resource_path>)
+      cth_add_resources(<target_name> <resource_paths...>)
 
-   Adds a post-build command to copy resources to the target's output directory.
+   Adds post-build commands to copy one or more resource directories to the target's output directory.
 
    :param target_name: Name of the target to add resources to
    :type target_name: string
-   :param resource_path: Path to the resource directory to copy
-   :type resource_path: string
+   :param resource_paths: One or more paths to resource directories to copy
+   :type resource_paths: string or list of strings
 
    :pre: target_name exists
    :post: Resources are copied to the target directory after build, preserving directory structure
 
    .. note::
-      The resource directory will be copied to ``$<TARGET_FILE_DIR:target>/<resource_path>``.
+      Each resource directory will be copied to ``$<TARGET_FILE_DIR:target>/<resource_path>``.
       Directory structure is preserved relative to the original resource_path.
+      When multiple paths are provided, each directory is copied separately.
 
 #]]
-function(cth_add_resources TARGET_NAME RESOURCE_PATH)
+function(cth_add_resources TARGET_NAME)
     cth_assert_target("${TARGET_NAME}")
 
-    # Get the absolute path to the source resources
-    get_filename_component(ABS_RESOURCE_PATH ${RESOURCE_PATH} ABSOLUTE)
+    set(RESOURCE_PATHS ${ARGN})
 
-    add_custom_command(
-        TARGET ${TARGET_NAME}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${ABS_RESOURCE_PATH}"
-                # Use the original RESOURCE_PATH to preserve the structure
-                "$<TARGET_FILE_DIR:${TARGET_NAME}>/${RESOURCE_PATH}"
-        COMMENT "Copying resource directory: ${RESOURCE_PATH}"
-        VERBATIM
-    )
+    foreach(RESOURCE_PATH IN LISTS RESOURCE_PATHS)
+        # Get the absolute path to the source resources
+        get_filename_component(ABS_RESOURCE_PATH ${RESOURCE_PATH} ABSOLUTE)
+
+        add_custom_command(
+            TARGET ${TARGET_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${ABS_RESOURCE_PATH}"
+                    # Use the original RESOURCE_PATH to preserve the structure
+                    "$<TARGET_FILE_DIR:${TARGET_NAME}>/${RESOURCE_PATH}"
+            COMMENT "Copying resource directory: ${RESOURCE_PATH}"
+            VERBATIM
+        )
+    endforeach()
 endfunction()
 
 
