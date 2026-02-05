@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Lukas Thomann
 # Licensed under the MIT License
 
-include(cth_assertions.cmake)
+include(cth_assertions)
 
 #[[.rst:
 .. command:: cth_glob
