@@ -39,6 +39,7 @@ To help you set up targets and dependencies quicker:
   - `cth_target_add_modules` — add C++ module files to a target with PUBLIC/PRIVATE visibility.
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
   - `cth_target_enable_build_cache` — enable per-target build-cache integration ([installation](#optional))
+  - `cth_add_clang_format_target` — create a "format" target that runs clang-format on specified source files
 
 ## cth_install_utilities
 **Ever wanted to create a cmake installable package?**  
@@ -62,6 +63,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 
 ## cth_tool_utilities
   - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables. ([installation](#optional))
+  - `cth_find_clang_format` — locate clang-format executable and export path to parent scope
 
 ## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.

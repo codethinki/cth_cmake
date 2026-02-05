@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Lukas Thomann
+# Licensed under the MIT License
 
 #[[.rst:
 .. command:: cth_glob
@@ -329,4 +331,62 @@ function(cth_target_add_modules TARGET_NAME)
             FILE_SET CXX_MODULES TYPE CXX_MODULES FILES ${ARGS_PUBLIC}
         )
     endif()
+endfunction()
+
+
+#[[.rst:
+.. command:: cth_add_clang_format_target
+
+   .. code-block:: cmake
+
+      cth_add_clang_format_target(<files...>)
+
+   Creates a custom target named "format" that runs clang-format on specified files.
+
+   :param files: List of source files to format
+   :type files: list of file paths
+
+   :pre: clang-format executable is available in PATH
+   :post: A custom target named "format" is created that formats the specified files in-place
+
+   .. note::
+      - The format target uses ``-i`` flag to format files in-place
+      - The ``-style=file`` flag means clang-format will look for a .clang-format configuration file
+      - Files are formatted relative to CMAKE_SOURCE_DIR
+
+   .. warning::
+      This function will fail if clang-format is not found in PATH.
+
+   **Example usage:**
+
+   .. code-block:: cmake
+
+      # Format specific files
+      cth_add_clang_format_target(
+          src/main.cpp
+          src/utils.cpp
+          include/header.hpp
+      )
+
+      # Then run: cmake --build . --target format
+
+   .. seealso::
+      - ``cth_find_clang_format()`` from cth_tool_utilities to locate clang-format
+      - Create a .clang-format file in your project root to define formatting style
+
+#]]
+function(cth_add_clang_format_target)
+    include(cth_tool_utilities.cmake)
+    cth_find_clang_format()
+
+    set(FILES_TO_FORMAT ${ARGN})
+
+    # 3. Create the custom target "format"
+    add_custom_target(
+        format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${FILES_TO_FORMAT}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting all source files with clang-format..."
+        VERBATIM
+    )
 endfunction()

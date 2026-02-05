@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Lukas Thomann
+# Licensed under the MIT License
+
 include(cth_target_utilities)
 
 #[[.rst:

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Lukas Thomann
+# Licensed under the MIT License
+
 cmake_minimum_required(VERSION 4.0.0)
 
 message(STATUS "---- cth_cmake toolchain ----")
