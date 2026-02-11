@@ -4,11 +4,11 @@
 include(cth_assertions)
 
 #[[.rst:
-.. command:: cth_find_program
+.. command:: cth_find_optional_program
 
    .. code-block:: cmake
 
-      cth_find_program(<out_var> <prog> [args...])
+      cth_find_optional_program(<out_var> <prog> [args...])
 
    Locates an external program and exports its path to the parent scope.
 
@@ -18,11 +18,42 @@ include(cth_assertions)
    :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
    :type args: optional arguments
 
-   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program, or configuration terminates with FATAL_ERROR if not found
+   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program if found, or an empty string if not found
+
+   .. note::
+      Unlike ``cth_find_program()``, this function does not error if the program is not found.
+      Check if the result variable is empty to determine if the program was found.
+
 #]]
-function(cth_find_program OUT_VAR prog)
+function(cth_find_optional_program OUT_VAR prog)
     
     find_program(${OUT_VAR} "${prog}" ${ARGN})
+    
+    set(${OUT_VAR} "${${OUT_VAR}}" PARENT_SCOPE)
+endfunction()
+
+#[[.rst:
+.. command:: cth_find_program
+
+   .. code-block:: cmake
+
+      cth_find_program(<out_var> <prog> [args...])
+
+   Locates a required external program and exports its path to the parent scope.
+   Terminates configuration with FATAL_ERROR if not found.
+
+   :param OUT_VAR variable to export program path to
+   :param prog: Name of the program to find
+   :param args: Additional arguments to pass to find_program
+
+   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program, or configuration terminates with FATAL_ERROR if not found
+
+   .. seealso::
+      See ``cth_find_optional_program()`` for a variant that does not error if the program is not found.
+
+#]]
+function(cth_find_program OUT_VAR prog)
+    cth_find_optional_program(${OUT_VAR} "${prog}" ${ARGN})
     
     cth_assert_true(${OUT_VAR} REASON "Program '${prog}' not found")
     
@@ -63,31 +94,55 @@ function(cth_enable_build_cache)
 endfunction()
 
 #[[.rst:
+.. command:: cth_find_opt_clang_format
+
+   .. code-block:: cmake
+
+      cth_find_opt_clang_format()
+
+   Locates the clang-format executable and exports its path to the parent scope.
+   Does not error if clang-format is not found.
+
+   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or an empty string if not found
+
+   .. note::
+      Check if CLANG_FORMAT_EXECUTABLE is empty to determine if clang-format was found.
+
+   .. seealso::
+      Use ``cth_add_clang_format_target()`` from cth_target_utilities to create a format target.
+
+#]]
+function(cth_find_opt_clang_format)
+   cth_find_optional_program(CLANG_FORMAT_EXECUTABLE clang-format)
+   
+   if(CLANG_FORMAT_EXECUTABLE)
+      message(STATUS "Found external clang-format: ${CLANG_FORMAT_EXECUTABLE}")
+   endif()
+
+   set(CLANG_FORMAT_EXECUTABLE ${CLANG_FORMAT_EXECUTABLE} PARENT_SCOPE)
+endfunction()
+
+#[[.rst:
 .. command:: cth_find_clang_format
 
    .. code-block:: cmake
 
       cth_find_clang_format()
 
-   Locates the clang-format executable and exports its path to the parent scope.
+   Locates a required clang-format executable and exports its path to the parent scope.
+   Terminates configuration with FATAL_ERROR if not found.
 
-   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or configuration terminates with FATAL_ERROR if not found
-
-   .. note::
-      The clang-format executable must be available in PATH.
-
-   .. warning::
-      This function will fail with FATAL_ERROR if clang-format is not found.
-      Ensure clang-format is installed and available in your system PATH.
+   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or configuration terminates with FATAL_ERROR
 
    .. seealso::
+      See ``cth_find_opt_clang_format()`` for a variant that does not error if clang-format is not found.
       Use ``cth_add_clang_format_target()`` from cth_target_utilities to create a format target.
 
 #]]
 function(cth_find_clang_format)
-   cth_find_program(CLANG_FORMAT_EXECUTABLE clang-format)
+   cth_find_opt_clang_format()
    
-   message(STATUS "Found external clang-format: ${CLANG_FORMAT_EXECUTABLE}")
-
+   cth_assert_true(CLANG_FORMAT_EXECUTABLE REASON "clang-format not found")
+   
    set(CLANG_FORMAT_EXECUTABLE ${CLANG_FORMAT_EXECUTABLE} PARENT_SCOPE)
 endfunction()

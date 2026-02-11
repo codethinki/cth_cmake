@@ -28,6 +28,7 @@ Simple assertions that every language should have:
   - `cth_assert_[_not]_target` — assert a CMake target does (not) exists in the current scope.
   - `cth_assert_[_not]_empty` — assert a string value is (not) empty.
   - `cth_assert_program` — locate an external program (supports `find_program` args) and export `<PROG>_PROGRAM` to the parent scope (fails if not found).
+  - `cth_assert_file` — assert that a particular file exists and is not a directory.
 
 ## cth_target_utilities
 To help you set up targets and dependencies quicker:

@@ -293,3 +293,31 @@ function(cth_assert_program prog)
     
     cth_assert_true(${VAR_NAME} REASON "${ARG_REASON}")
 endfunction()
+
+#[[.rst:
+.. command:: cth_assert_file
+
+   .. code-block:: cmake
+
+      cth_assert_file(<file> [REASON <reason>])
+
+   Asserts that a file exists and is not a directory.
+
+   :param file: Path to the file to check
+   :type file: string
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
+
+   :post: file exists and is not a directory or configuration terminates with FATAL_ERROR
+#]]
+function(cth_assert_file file)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+
+    if(NOT EXISTS "${file}" OR IS_DIRECTORY "${file}")
+        if(NOT ARG_REASON)
+            set(ARG_REASON "File '${file}' does not exist or is a directory")
+        endif()
+        _cth_assertion_failure("${ARG_REASON}")
+    endif()
+endfunction()

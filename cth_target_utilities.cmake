@@ -349,56 +349,44 @@ endfunction()
 
 
 #[[.rst:
-.. command:: cth_add_clang_format_target
+.. command:: cth_add_opt_clang_format_target
 
    .. code-block:: cmake
 
-      cth_add_clang_format_target(<files...>)
+      cth_add_opt_clang_format_target(<target_name> <files...>)
 
-   Creates a custom target named "format" that runs clang-format on specified files.
+   Optionally creates a custom target that runs clang-format on specified files.
+   Only creates the target if clang-format is available.
 
+   :param target_name: Name of the custom target to create
+   :type target_name: string
    :param files: List of source files to format
    :type files: list of file paths
 
-   :pre: clang-format executable is available in PATH
-   :post: A custom target named "format" is created that formats the specified files in-place
+   :post: A custom target is created if clang-format is found; otherwise no target is created
 
    .. note::
       - The format target uses ``-i`` flag to format files in-place
       - The ``-style=file`` flag means clang-format will look for a .clang-format configuration file
       - Files are formatted relative to CMAKE_SOURCE_DIR
-
-   .. warning::
-      This function will fail if clang-format is not found in PATH.
-
-   **Example usage:**
-
-   .. code-block:: cmake
-
-      # Format specific files
-      cth_add_clang_format_target(
-          src/main.cpp
-          src/utils.cpp
-          include/header.hpp
-      )
-
-      # Then run: cmake --build . --target format
+      - Check if the target exists before depending on it in your build
 
    .. seealso::
-      - ``cth_find_clang_format()`` from cth_tool_utilities to locate clang-format
-      - Create a .clang-format file in your project root to define formatting style
+      - ``cth_find_opt_clang_format()`` from cth_tool_utilities to locate clang-format optionally
 
 #]]
-function(cth_add_clang_format_target TARGET_NAME)
-    cth_assert_not_empty(${TARGET_NAME} REASON "add_clang_format_target requires a target name")
+function(cth_add_opt_clang_format_target TARGET_NAME)
+    cth_assert_not_empty(${TARGET_NAME} REASON "add_opt_clang_format_target requires a target name")
 
     include(cth_tool_utilities)
-    cth_find_clang_format()
+    cth_find_opt_clang_format()
+
+    if(NOT CLANG_FORMAT_EXECUTABLE)
+        message(STATUS "clang-format not found, skipping ${TARGET_NAME} target creation")
+        return()
+    endif()
 
     set(FILES_TO_FORMAT ${ARGN})
-
-    
-
 
     add_custom_target(
         ${TARGET_NAME}
@@ -407,4 +395,45 @@ function(cth_add_clang_format_target TARGET_NAME)
         COMMENT "Formatting all source files with clang-format..."
         VERBATIM
     )
+endfunction()
+
+#[[.rst:
+.. command:: cth_add_clang_format_target
+
+   .. code-block:: cmake
+
+      cth_add_clang_format_target(<target_name> <files...>)
+
+   Creates a required custom target that runs clang-format on specified files.
+   Terminates configuration with FATAL_ERROR if clang-format is not found.
+
+   :param target_name: Name of the custom target to create
+   :param files: List of source files to format
+
+   :post: A custom target is created, or configuration terminates with FATAL_ERROR if clang-format not found
+
+   **Example usage:**
+
+   .. code-block:: cmake
+
+      cth_add_clang_format_target(
+          format
+          src/main.cpp
+          src/utils.cpp
+          include/header.hpp
+      )
+
+      # Then run: cmake --build . --target format
+
+   .. seealso::
+      - ``cth_add_opt_clang_format_target()`` for optional target creation
+      - ``cth_find_clang_format()`` from cth_tool_utilities to locate clang-format
+      - Create a .clang-format file in your project root to define formatting style
+
+#]]
+function(cth_add_clang_format_target TARGET_NAME)
+    include(cth_tool_utilities)
+    cth_find_clang_format()
+
+    cth_add_opt_clang_format_target(${TARGET_NAME} ${ARGN})
 endfunction()
