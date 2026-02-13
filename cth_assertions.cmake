@@ -8,35 +8,34 @@ cmake_minimum_required(VERSION 4.1)
 
    .. code-block:: cmake
 
-      _cth_assertion_failure(<reason> <args...>)
+      _cth_assertion_failure(<level> <reason> <args...>)
 
-   Internal macro to terminate configuration with a formatted error message.
+   Internal macro to report an assertion failure.
 
+   :param level: Message level (e.g., FATAL_ERROR, WARNING)
+   :type level: string
    :param reason: Error message describing the failure
    :type reason: string
    :param args: Additional context to append to error message
    :type args: optional arguments
 
-   :post: Configuration terminates with FATAL_ERROR
-
    .. warning::
       This is an internal function. Use the public assertion functions instead.
 #]]
-macro(_cth_assertion_failure reason)
-    
-
+macro(_cth_assertion_failure level reason)
+    if("${level}" STREQUAL "")
+        set(level FATAL_ERROR)
+    endif()
     if("${reason}" STREQUAL "")
         set(reason "unknown reason")
     endif()
     if("${ARGN}" STREQUAL "")
         set(ARG_STR "")  
     else()
-        set(ARG_STR "[args: ${ARGN}]")
+        set(ARG_STR " [args: ${ARGN}]")
     endif()
 
-
-
-    message(FATAL_ERROR "ERROR: ${reason}${ARG_STR}")
+    message(${level} "ERROR: ${reason}${ARG_STR}")
 endmacro()
 
 #[[.rst:
@@ -44,25 +43,33 @@ endmacro()
 
    .. code-block:: cmake
 
-      cth_assert_true(<condition...> REASON <reason>)
+      cth_assert_true(<condition...> [FATAL|WARNING] REASON <reason>)
 
-   Asserts that a boolean condition evaluates to TRUE, terminating configuration otherwise.
+   Asserts that a boolean condition evaluates to TRUE.
 
    :param condition: CMake boolean expression to evaluate
    :type condition: boolean expression
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if condition is FALSE
+   :param WARNING: Issue a WARNING if condition is FALSE
    :param REASON: Error message to display if the condition is FALSE
    :type REASON: string
 
    :pre: condition is a valid CMake boolean expression
-   :post: condition evaluates to TRUE, or configuration terminates with FATAL_ERROR
+   :post: condition evaluates to TRUE, or configuration reports failure based on level
 
 #]]
 function(cth_assert_true)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
+
     if(NOT ${ARG_UNPARSED_ARGUMENTS})
-        _cth_assertion_failure("${ARG_REASON}")
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
 
@@ -71,25 +78,33 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_false(<condition...> REASON <reason>)
+      cth_assert_false(<condition...> [FATAL|WARNING] REASON <reason>)
 
-   Asserts that a boolean condition evaluates to FALSE, terminating configuration otherwise.
+   Asserts that a boolean condition evaluates to FALSE.
 
    :param condition: CMake boolean expression to evaluate
    :type condition: boolean expression
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if condition is TRUE
+   :param WARNING: Issue a WARNING if condition is TRUE
    :param REASON: Error message to display if the condition is TRUE
    :type REASON: string
 
    :pre: condition is a valid CMake boolean expression
-   :post: condition evaluates to FALSE, or configuration terminates with FATAL_ERROR
+   :post: condition evaluates to FALSE, or configuration reports failure based on level
 
 #]]
 function(cth_assert_false)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
+
     if(${ARG_UNPARSED_ARGUMENTS})
-        _cth_assertion_failure("${ARG_REASON}")
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
 
@@ -98,27 +113,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_cmd(<cmd> [REASON <reason>])
+      cth_assert_not_cmd(<cmd> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a CMake command, function, or macro is NOT defined.
 
    :param cmd: Name of the command to check
    :type cmd: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: cmd is NOT a defined command/function/macro, or configuration terminates with FATAL_ERROR
+   :post: cmd is NOT a defined command/function/macro, or configuration reports failure based on level
 
 #]]
 function(cth_assert_not_cmd cmd)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL_FLAG FATAL)
+    if(ARG_WARNING)
+        set(LEVEL_FLAG WARNING)
+    endif()
+
     if(NOT ARG_REASON)
         set(ARG_REASON "Command '${cmd}' already defined")
     endif()
     
-    cth_assert_false(COMMAND ${cmd} REASON "${ARG_REASON}")
+    cth_assert_false(COMMAND ${cmd} ${LEVEL_FLAG} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -126,27 +149,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_cmd(<cmd> [REASON <reason>])
+      cth_assert_cmd(<cmd> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a CMake command, function, or macro is defined.
 
    :param cmd: Name of the command to check
    :type cmd: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: cmd is a defined command/function/macro, or configuration terminates with FATAL_ERROR
+   :post: cmd is a defined command/function/macro, or configuration reports failure based on level
 
 #]]
 function(cth_assert_cmd cmd)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL_FLAG FATAL)
+    if(ARG_WARNING)
+        set(LEVEL_FLAG WARNING)
+    endif()
+
     if(NOT ARG_REASON)
         set(ARG_REASON "Command '${cmd}' not defined")
     endif()
     
-    cth_assert_true(COMMAND ${cmd} REASON "${ARG_REASON}")
+    cth_assert_true(COMMAND ${cmd} ${LEVEL_FLAG} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -154,27 +185,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_target(<target> [REASON <reason>])
+      cth_assert_target(<target> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a CMake target exists in the current scope.
 
    :param target: Name of the target to check
    :type target: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: target exists, or configuration terminates with FATAL_ERROR
+   :post: target exists, or configuration reports failure based on level
 
 #]]
 function(cth_assert_target target)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL_FLAG FATAL)
+    if(ARG_WARNING)
+        set(LEVEL_FLAG WARNING)
+    endif()
+
     if(NOT ARG_REASON)
         set(ARG_REASON "Target '${target}' does not exist")
     endif()
     
-    cth_assert_true(TARGET ${target} REASON "${ARG_REASON}")
+    cth_assert_true(TARGET ${target} ${LEVEL_FLAG} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -182,27 +221,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_target(<target> [REASON <reason>])
+      cth_assert_not_target(<target> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a CMake target does NOT exist in the current scope.
 
    :param target: Name of the target to check
    :type target: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: target does NOT exist, or configuration terminates with FATAL_ERROR
+   :post: target does NOT exist, or configuration reports failure based on level
 
 #]]
 function(cth_assert_not_target target)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL_FLAG FATAL)
+    if(ARG_WARNING)
+        set(LEVEL_FLAG WARNING)
+    endif()
+
     if(NOT ARG_REASON)
         set(ARG_REASON "Target '${target}' already exists")
     endif()
     
-    cth_assert_false(TARGET ${target} REASON "${ARG_REASON}")
+    cth_assert_false(TARGET ${target} ${LEVEL_FLAG} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -210,27 +257,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_empty(<value> [REASON <reason>])
+      cth_assert_empty(<value> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a value is an empty string.
 
    :param value: Value to check for emptiness
    :type value: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: value is an empty string, or configuration terminates with FATAL_ERROR
+   :post: value is an empty string, or configuration reports failure based on level
 
 #]]
 function(cth_assert_empty value)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
+
     if(NOT ("${value}" STREQUAL ""))
         if(NOT ARG_REASON)
             set(ARG_REASON "Value not empty: '${value}'")
         endif()
-        _cth_assertion_failure("${ARG_REASON}")
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
 
@@ -239,27 +294,35 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_not_empty(<value> [REASON <reason>])
+      cth_assert_not_empty(<value> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a value is NOT an empty string.
 
    :param value: Value to check for non-emptiness
    :type value: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: value is NOT an empty string, or configuration terminates with FATAL_ERROR
+   :post: value is NOT an empty string, or configuration reports failure based on level
 
 #]]
 function(cth_assert_not_empty value)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
+
     if("${value}" STREQUAL "")
         if(NOT ARG_REASON)
             set(ARG_REASON "Value is empty")
         endif()
-        _cth_assertion_failure("${ARG_REASON}")
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
 
@@ -268,30 +331,38 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_program(<prog> [REASON <reason>] [args...])
+      cth_assert_program(<prog> [FATAL|WARNING] [REASON <reason>] [args...])
 
    Asserts an external program exists.
 
    :param prog: Name of the program to find
    :type prog: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
    :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
    :type args: optional arguments
 
-   :post: program found or configuration terminates with FATAL_ERROR
+   :post: program found or configuration reports failure based on level
 #]]
 function(cth_assert_program prog)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
     
+    set(LEVEL_FLAG FATAL)
+    if(ARG_WARNING)
+        set(LEVEL_FLAG WARNING)
+    endif()
+
     find_program(TEMP "${prog}" ${ARG_UNPARSED_ARGUMENTS})
     
     if(NOT ARG_REASON)
         set(ARG_REASON "Program '${prog}' not found")
     endif()
     
-    cth_assert_true(${VAR_NAME} REASON "${ARG_REASON}")
+    cth_assert_true(TEMP ${LEVEL_FLAG} REASON "${ARG_REASON}")
 endfunction()
 
 #[[.rst:
@@ -299,25 +370,33 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_assert_file(<file> [REASON <reason>])
+      cth_assert_file(<file> [FATAL|WARNING] [REASON <reason>])
 
    Asserts that a file exists and is not a directory.
 
    :param file: Path to the file to check
    :type file: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
    :param REASON: Optional error message to display if the assertion fails
    :type REASON: string
 
-   :post: file exists and is not a directory or configuration terminates with FATAL_ERROR
+   :post: file exists and is not a directory or configuration reports failure based on level
 #]]
 function(cth_assert_file file)
+    set(options FATAL WARNING)
     set(oneValueArgs REASON)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${oneValueArgs}" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
+
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
 
     if(NOT EXISTS "${file}" OR IS_DIRECTORY "${file}")
         if(NOT ARG_REASON)
             set(ARG_REASON "File '${file}' does not exist or is a directory")
         endif()
-        _cth_assertion_failure("${ARG_REASON}")
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
