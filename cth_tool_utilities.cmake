@@ -4,60 +4,42 @@
 include(cth_assertions)
 
 #[[.rst:
-.. command:: cth_find_optional_program
-
-   .. code-block:: cmake
-
-      cth_find_optional_program(<out_var> <prog> [args...])
-
-   Locates an external program and exports its path to the parent scope.
-
-   :param OUT_VAR variable to export program path to
-   :param prog: Name of the program to find
-   :type prog: string
-   :param args: Additional arguments to pass to find_program (e.g., PATHS, HINTS)
-   :type args: optional arguments
-
-   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program if found, or an empty string if not found
-
-   .. note::
-      Unlike ``cth_find_program()``, this function does not error if the program is not found.
-      Check if the result variable is empty to determine if the program was found.
-
-#]]
-function(cth_find_optional_program OUT_VAR prog)
-    
-    find_program(${OUT_VAR} "${prog}" ${ARGN})
-    
-    set(${OUT_VAR} "${${OUT_VAR}}" PARENT_SCOPE)
-endfunction()
-
-#[[.rst:
 .. command:: cth_find_program
 
    .. code-block:: cmake
 
-      cth_find_program(<out_var> <prog> [args...])
+      cth_find_program(<out_var> <prog> [OPTIONAL] [args...])
 
-   Locates a required external program and exports its path to the parent scope.
-   Terminates configuration with FATAL_ERROR if not found.
+   Locates an external program and exports its path to the parent scope.
+   If OPTIONAL is specified, does not error if program is not found.
 
    :param OUT_VAR variable to export program path to
    :param prog: Name of the program to find
+   :param OPTIONAL: If specified, do not raise FATAL_ERROR if program is not found
    :param args: Additional arguments to pass to find_program
 
-   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program, or configuration terminates with FATAL_ERROR if not found
-
-   .. seealso::
-      See ``cth_find_optional_program()`` for a variant that does not error if the program is not found.
+   :post: <OUT_VAR> variable is set in PARENT_SCOPE with the full path to the program, or configuration terminates with FATAL_ERROR if not found and not OPTIONAL
 
 #]]
 function(cth_find_program OUT_VAR prog)
-    cth_find_optional_program(${OUT_VAR} "${prog}" ${ARGN})
+    cmake_parse_arguments(PARSE_ARGV 2 ARG "OPTIONAL" "" "")
+
+    find_program(${OUT_VAR} "${prog}" ${ARG_UNPARSED_ARGUMENTS})
     
+    if(${OUT_VAR})
+        message(STATUS "${prog} found: ${${OUT_VAR}}")
+        message(VERBOSE "${prog} location: ${${OUT_VAR}}")
+        set(${OUT_VAR} "${${OUT_VAR}}" PARENT_SCOPE)
+        return()
+    endif()
+
+    if(ARG_OPTIONAL)
+        message(STATUS "${prog} not found")
+        set(${OUT_VAR} "" PARENT_SCOPE)
+        return()
+    endif()
+
     cth_assert_true(${OUT_VAR} REASON "Program '${prog}' not found")
-    
-    set(${OUT_VAR} "${${OUT_VAR}}" PARENT_SCOPE)
 endfunction()
 
 #[[.rst:
@@ -65,10 +47,11 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_enable_build_cache()
+      cth_enable_build_cache([OPTIONAL])
 
    Enables BuildCache globally for all targets by setting compiler launcher variables.
 
+   :param OPTIONAL: If specified, do not raise FATAL_ERROR if buildcache is not found
    :pre: buildcache program is found in PATH
    :post: CMAKE_C_COMPILER_LAUNCHER and CMAKE_CXX_COMPILER_LAUNCHER are set to buildcache in PARENT_SCOPE
 
@@ -85,41 +68,23 @@ endfunction()
 
 #]]
 function(cth_enable_build_cache)
-    cth_find_program(BUILDCACHE_EXECUTABLE buildcache)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "OPTIONAL" "" "")
 
-    message(STATUS "Enabling buildcache globally: ${BUILDCACHE_EXECUTABLE}")
+    if (ARG_OPTIONAL)
+        cth_find_program(BUILDCACHE_EXECUTABLE buildcache OPTIONAL)
+    else()
+        cth_find_program(BUILDCACHE_EXECUTABLE buildcache)
+    endif()
+    
+    if(BUILDCACHE_EXECUTABLE)
+        message(STATUS "BuildCache globally enabled")
+    else()
+        message(STATUS "Couldn't enable BuildCache globally")
+        return()
+    endif()
 
     set(CMAKE_C_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
-endfunction()
-
-#[[.rst:
-.. command:: cth_find_opt_clang_format
-
-   .. code-block:: cmake
-
-      cth_find_opt_clang_format()
-
-   Locates the clang-format executable and exports its path to the parent scope.
-   Does not error if clang-format is not found.
-
-   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or an empty string if not found
-
-   .. note::
-      Check if CLANG_FORMAT_EXECUTABLE is empty to determine if clang-format was found.
-
-   .. seealso::
-      Use ``cth_add_clang_format_target()`` from cth_target_utilities to create a format target.
-
-#]]
-function(cth_find_opt_clang_format)
-   cth_find_optional_program(CLANG_FORMAT_EXECUTABLE clang-format)
-   
-   if(CLANG_FORMAT_EXECUTABLE)
-      message(STATUS "Found external clang-format: ${CLANG_FORMAT_EXECUTABLE}")
-   endif()
-
-   set(CLANG_FORMAT_EXECUTABLE ${CLANG_FORMAT_EXECUTABLE} PARENT_SCOPE)
 endfunction()
 
 #[[.rst:
@@ -127,22 +92,25 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_find_clang_format()
+      cth_find_clang_format([OPTIONAL])
 
    Locates a required clang-format executable and exports its path to the parent scope.
-   Terminates configuration with FATAL_ERROR if not found.
+   If OPTIONAL is specified, does not error if clang-format is not found.
 
-   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or configuration terminates with FATAL_ERROR
+   :post: CLANG_FORMAT_EXECUTABLE is set in PARENT_SCOPE with the full path to clang-format, or configuration terminates with FATAL_ERROR if not found and not OPTIONAL
 
    .. seealso::
-      See ``cth_find_opt_clang_format()`` for a variant that does not error if clang-format is not found.
       Use ``cth_add_clang_format_target()`` from cth_target_utilities to create a format target.
 
 #]]
 function(cth_find_clang_format)
-   cth_find_opt_clang_format()
-   
-   cth_assert_true(CLANG_FORMAT_EXECUTABLE REASON "clang-format not found")
+   cmake_parse_arguments(PARSE_ARGV 0 ARG "OPTIONAL" "" "")
+
+   if(ARG_OPTIONAL)
+      cth_find_program(CLANG_FORMAT_EXECUTABLE clang-format OPTIONAL)
+   else()
+      cth_find_program(CLANG_FORMAT_EXECUTABLE clang-format)
+   endif()
    
    set(CLANG_FORMAT_EXECUTABLE ${CLANG_FORMAT_EXECUTABLE} PARENT_SCOPE)
 endfunction()

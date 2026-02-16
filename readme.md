@@ -66,7 +66,8 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 
 ## cth_tool_utilities
   - `cth_enable_build_cache` — enable BuildCache globally by setting C/C++ compiler launcher variables. ([installation](#optional))
-  - `cth_find_clang_format` — locate clang-format executable and export path to parent scope
+  - `cth_find_program` — locate an external program and export path to parent scope.
+  - `cth_find_clang_format` — locate clang-format executable and export path to parent scope.
 
 ## toolchain.cmake
   - (toolchain configuration) — contains the project's recommended toolchain preset for CMake.
@@ -130,7 +131,11 @@ this is more or less for me, very handy but no backwards compatibility guarantee
     altho i strongly advise against it, you can disable automatic vcpkg integration with `CTH_DISABLE_VCPKG_INTEGRATION` 
 
 ## Optional
--  [BuildCache](https://gitlab.com/bits-n-bites/buildcache)  (windows guide, dunno for linux :D):
-    1. install [scoop](https://scoop.sh/) (windows only)
-    2. `scoop bucket add extras`
-    3. `scoop install BuildCache`
+-  [BuildCache](https://gitlab.com/bits-n-bites/buildcache):
+    - Windows:
+        1. install [scoop](https://scoop.sh/) (windows only)
+        2. `scoop bucket add extras`
+        3. `scoop install BuildCache`
+    - Linux (arch)
+        1. install via the AUR (buildcache-git) or via pacman if on cachyos
+

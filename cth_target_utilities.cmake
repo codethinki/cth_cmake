@@ -38,7 +38,11 @@ function(cth_glob OUT_VAR)
         # Case 1: Both paths and patterns provided - generate cross-product
         foreach(SUB_PATH IN LISTS SUB_PATHS)
             foreach(PATTERN IN LISTS ARG_PATTERNS)
-                list(APPEND GLOB_PATTERNS "${SUB_PATH}/${PATTERN}")
+                if(SUB_PATH)
+                    list(APPEND GLOB_PATTERNS "${SUB_PATH}/${PATTERN}")
+                else()
+                    list(APPEND GLOB_PATTERNS "${PATTERN}")
+                endif()
             endforeach()
         endforeach()
     elseif(SUB_PATHS)
@@ -247,7 +251,7 @@ endfunction()
 
    .. code-block:: cmake
 
-      cth_target_enable_build_cache(<target>)
+      cth_target_enable_build_cache(<target> [OPTIONAL])
 
    Enables build caching for the specified target using BuildCache.
 
@@ -256,7 +260,7 @@ endfunction()
 
    :pre: target exists
    :pre: buildcache program is found in PATH
-   :post: C and C++ compiler launchers are set to buildcache for the target
+   :post: C and C++ compiler launchers are set to buildcache for the target if found
 
    .. note::
       BuildCache must be installed and available in PATH.
@@ -269,7 +273,22 @@ endfunction()
 function(cth_target_enable_build_cache target)
     cth_assert_target("${target}")
 
-    cth_assert_program(buildcache)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "OPTIONAL" "" "")
+
+    include(cth_tool_utilities)
+
+    if(ARG_OPTIONAL)
+        cth_find_program(BUILDCACHE_PROGRAM buildcache OPTIONAL)
+    else()
+        cth_find_program(BUILDCACHE_PROGRAM buildcache)
+    endif()
+    
+    if(NOT BUILDCACHE_PROGRAM)
+        message(STATUS "Couldn't enable BuildCache for target '${target}'")
+        return()
+    endif()
+
+    message(STATUS "BuildCache enabled for target '${target}'")
 
     set_target_properties(${target} PROPERTIES
         C_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
@@ -359,44 +378,49 @@ endfunction()
 
 
 #[[.rst:
-.. command:: cth_add_opt_clang_format_target
+.. command:: cth_add_clang_format_target
 
    .. code-block:: cmake
 
-      cth_add_opt_clang_format_target(<target_name> <files...>)
+      cth_add_clang_format_target(<target_name> [OPTIONAL] <files...>)
 
-   Optionally creates a custom target that runs clang-format on specified files.
-   Only creates the target if clang-format is available.
+   Creates a custom target that runs clang-format on specified files.
+   If OPTIONAL is specified, does not error and skips target creation if clang-format is not found.
 
    :param target_name: Name of the custom target to create
-   :type target_name: string
+   :param OPTIONAL: If specified, do not raise FATAL_ERROR if clang-format is not found
    :param files: List of source files to format
-   :type files: list of file paths
 
-   :post: A custom target is created if clang-format is found; otherwise no target is created
+   :post: A custom target is created if found, or configuration terminates with FATAL_ERROR if not found (unless OPTIONAL)
 
    .. note::
       - The format target uses ``-i`` flag to format files in-place
       - The ``-style=file`` flag means clang-format will look for a .clang-format configuration file
       - Files are formatted relative to CMAKE_SOURCE_DIR
-      - Check if the target exists before depending on it in your build
 
    .. seealso::
-      - ``cth_find_opt_clang_format()`` from cth_tool_utilities to locate clang-format optionally
+      - ``cth_find_clang_format(OPTIONAL)`` from cth_tool_utilities to locate clang-format optionally
 
 #]]
-function(cth_add_opt_clang_format_target TARGET_NAME)
-    cth_assert_not_empty(${TARGET_NAME} REASON "add_opt_clang_format_target requires a target name")
+function(cth_add_clang_format_target TARGET_NAME)
+    cth_assert_not_empty(${TARGET_NAME} REASON "add_clang_format_target requires a target name")
+    
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "OPTIONAL" "" "")
 
     include(cth_tool_utilities)
-    cth_find_opt_clang_format()
+    
+    if(ARG_OPTIONAL)
+        cth_find_clang_format(OPTIONAL)
+    else()
+        cth_find_clang_format()
+    endif()
 
     if(NOT CLANG_FORMAT_EXECUTABLE)
-        message(STATUS "clang-format not found, skipping ${TARGET_NAME} target creation")
+        message(STATUS "Couldn't create format target '${TARGET_NAME}' (clang-format not found)")
         return()
     endif()
 
-    set(FILES_TO_FORMAT ${ARGN})
+    set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
 
     add_custom_target(
         ${TARGET_NAME}
@@ -405,47 +429,6 @@ function(cth_add_opt_clang_format_target TARGET_NAME)
         COMMENT "Formatting all source files with clang-format..."
         VERBATIM
     )
-endfunction()
-
-#[[.rst:
-.. command:: cth_add_clang_format_target
-
-   .. code-block:: cmake
-
-      cth_add_clang_format_target(<target_name> <files...>)
-
-   Creates a required custom target that runs clang-format on specified files.
-   Terminates configuration with FATAL_ERROR if clang-format is not found.
-
-   :param target_name: Name of the custom target to create
-   :param files: List of source files to format
-
-   :post: A custom target is created, or configuration terminates with FATAL_ERROR if clang-format not found
-
-   **Example usage:**
-
-   .. code-block:: cmake
-
-      cth_add_clang_format_target(
-          format
-          src/main.cpp
-          src/utils.cpp
-          include/header.hpp
-      )
-
-      # Then run: cmake --build . --target format
-
-   .. seealso::
-      - ``cth_add_opt_clang_format_target()`` for optional target creation
-      - ``cth_find_clang_format()`` from cth_tool_utilities to locate clang-format
-      - Create a .clang-format file in your project root to define formatting style
-
-#]]
-function(cth_add_clang_format_target TARGET_NAME)
-    include(cth_tool_utilities)
-    cth_find_clang_format()
-
-    cth_add_opt_clang_format_target(${TARGET_NAME} ${ARGN})
 endfunction()
 
 
@@ -592,6 +575,8 @@ function(cth_target_attach_dependency target mode)
     endforeach()
 endfunction()
 
+
+    
 #[[.rst:
 .. command:: cth_target_copy_dependencies
 
@@ -616,11 +601,64 @@ function(cth_target_copy_dependencies target)
     cth_assert_true("${TGT_TYPE}" MATCHES "^(EXECUTABLE|SHARED_LIBRARY)$"
         REASON "cth_target_copy_dependencies: Target '${target}' is of type '${TGT_TYPE}'. This function only supports EXECUTABLES or SHARED_LIBRARIES."
     )
+
+    get_target_property(_registered ${target} _CTH_COPY_DEPS_REGISTERED)
+    if(_registered)
+        message(WARNING "cth_target_copy_dependencies(${target}) called multiple times!")
+        return()
+    endif()
+    set_property(TARGET ${target} PROPERTY _CTH_COPY_DEPS_REGISTERED TRUE)
+
+    set(RETRY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${target}_copy_retry_$<CONFIG>.cmake")
+
+    # Generate the script. We use file(GENERATE) so generator expressions resolve correctly.
+    file(GENERATE OUTPUT "${RETRY_SCRIPT}" CONTENT "
+        cmake_minimum_required(VERSION 3.21)
+
+        set(DLLS \"$<TARGET_RUNTIME_DLLS:${target}>\")
+        set(DEST \"$<TARGET_FILE_DIR:${target}>\")
+
+        # Exit early if no DLLs to copy
+        if(NOT DLLS)
+            return()
+        endif()
+
+        # Retry Loop: Try up to 5 times
+        foreach(i RANGE 1 5)
+            # 1. Try to copy ALL files in one go (Fast).
+            #    'copy_if_different' is idempotent; if 49/50 files succeed, 
+            #    the next attempt only copies the 1 failed file.
+            execute_process(
+                COMMAND \${CMAKE_COMMAND} -E copy_if_different \${DLLS} \${DEST}
+                RESULT_VARIABLE CMD_RESULT
+                ERROR_VARIABLE CMD_ERR
+                OUTPUT_VARIABLE CMD_OUT
+            )
+
+            # 2. Check success
+            if(CMD_RESULT EQUAL 0)
+                return()
+            endif()
+
+            # 3. Handle failure
+            if(\${i} LESS 5)
+                # Print a warning but don't fail yet
+                message(STATUS \"[${target}] Copy failed (Attempt \${i}/5). Retrying in 1s...\")
+
+                # sleep
+                execute_process(COMMAND \${CMAKE_COMMAND} -E sleep 1)
+            else()
+                # Final attempt failed, print error and exit with failure code
+                message(STATUS \"\${CMD_OUT}\")
+                message(STATUS \"\${CMD_ERR}\")
+                message(FATAL_ERROR \"[${target}] Failed to copy dependencies after 5 attempts.\")
+            endif()
+        endforeach()
+    ")
+
+    # Add the post-build step to run the generated script
     add_custom_command(TARGET ${target} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_RUNTIME_DLLS:${target}>
-        $<TARGET_FILE_DIR:${target}>
-        COMMAND_EXPAND_LISTS
-        COMMENT "Propagating runtime dependencies for ${target}..."
+        COMMAND ${CMAKE_COMMAND} -P "${RETRY_SCRIPT}"
+        COMMENT "Propagating runtime dependencies for ${target} ..."
     )
 endfunction()
