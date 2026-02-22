@@ -403,28 +403,22 @@ endfunction()
 
 #]]
 function(cth_add_clang_format_target TARGET_NAME)
-    cth_assert_not_empty(${TARGET_NAME} REASON "add_clang_format_target requires a target name")
+    cth_assert_not_empty("${TARGET_NAME}" REASON "add_clang_format_target requires a target name")
     
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "OPTIONAL" "" "")
+    set(FILES_TO_FORMAT ${ARGN})
+    cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
 
-    include(cth_tool_utilities)
-    
-    if(ARG_OPTIONAL)
-        cth_find_clang_format(OPTIONAL)
-    else()
-        cth_find_clang_format()
-    endif()
+    include(fm_tool_utilities)
+    cth_find_clang_format()
 
-    if(NOT CLANG_FORMAT_EXECUTABLE)
-        message(STATUS "Couldn't create format target '${TARGET_NAME}' (clang-format not found)")
-        return()
-    endif()
 
-    set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
+    set(FILE_LIST_PATH "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_files.txt")
+    string(REPLACE ";" "\n" FILES_TO_FORMAT_STR "${FILES_TO_FORMAT}")
+    file(WRITE "${FILE_LIST_PATH}" "${FILES_TO_FORMAT_STR}\n")
 
     add_custom_target(
         ${TARGET_NAME}
-        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${FILES_TO_FORMAT}
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file --files=${FILE_LIST_PATH}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting all source files with clang-format..."
         VERBATIM
