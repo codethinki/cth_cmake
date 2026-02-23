@@ -84,7 +84,7 @@ endfunction()
 
 #]]
 function(cth_glob_cpp OUT_VAR)
-    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cpp" "*.hpp" "*.inl" "*.h" "*.cu")
+    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cpp" "*.hpp" "*.inl" "*.h" "*.cu" "*.cuh")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
