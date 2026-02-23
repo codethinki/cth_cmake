@@ -84,7 +84,7 @@ endfunction()
 
 #]]
 function(cth_glob_cpp OUT_VAR)
-    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cpp" "*.hpp" "*.inl" "*.h")
+    cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cpp" "*.hpp" "*.inl" "*.h" "*.cu")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
@@ -403,14 +403,28 @@ endfunction()
 
 #]]
 function(cth_add_clang_format_target TARGET_NAME)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "OPTIONAL" "" "")
+
+    # Use a different variable name to avoid conflicts with the parsed ARG_OPTIONAL boolean
+    if(ARG_OPTIONAL)
+        set(FIND_OPTIONAL_ARG "OPTIONAL")
+    else()
+        set(FIND_OPTIONAL_ARG "")
+    endif()
+
     cth_assert_not_empty("${TARGET_NAME}" REASON "add_clang_format_target requires a target name")
     
-    set(FILES_TO_FORMAT ${ARGN})
+    # Use ARG_UNPARSED_ARGUMENTS instead of ARGN so "OPTIONAL" isn't treated as a file
+    set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
     cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
 
     include(fm_tool_utilities)
-    cth_find_clang_format()
 
+    # Pass the safely stored string to the find function
+    cth_find_clang_format(${FIND_OPTIONAL_ARG})
+    if(NOT CLANG_FORMAT_EXECUTABLE)
+        return()
+    endif()
 
     set(FILE_LIST_PATH "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_files.txt")
     string(REPLACE ";" "\n" FILES_TO_FORMAT_STR "${FILES_TO_FORMAT}")
@@ -425,6 +439,67 @@ function(cth_add_clang_format_target TARGET_NAME)
     )
 endfunction()
 
+#[[.rst:
+.. command:: cth_add_uncrustify_target
+
+   .. code-block:: cmake
+
+      cth_add_uncrustify_target(<target_name> [OPTIONAL] <files...>)
+
+   Creates a custom target that runs uncrustify on specified files.
+   If OPTIONAL is specified, does not error and skips target creation if uncrustify is not found.
+
+   :param target_name: Name of the custom target to create
+   :param OPTIONAL: If specified, do not raise FATAL_ERROR if uncrustify is not found
+   :param files: List of source files to format
+
+   :pre expects uncrustify.cfg in root directory
+   :post: A custom target is created if found, or configuration terminates with FATAL_ERROR if not found (unless OPTIONAL)
+
+   .. note::
+      - The format target uses ``--replace`` and ``--no-backup`` flags to format files in-place
+      - The ``-F`` flag is used to pass the text file containing the list of files to format
+      - Files are formatted relative to CMAKE_SOURCE_DIR
+      - Uncrustify will look for an uncrustify.cfg file in the working directory or rely on the UNCRUSTIFY_CONFIG environment variable.
+
+   .. seealso::
+      - ``cth_find_uncrustify(OPTIONAL)`` from fm_tool_utilities to locate uncrustify optionally
+
+#]]
+function(cth_add_uncrustify_target TARGET_NAME)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "OPTIONAL" "" "")
+
+    # Use a different variable name to avoid being overwritten by cmake_parse_arguments
+    if(ARG_OPTIONAL)
+        set(FIND_OPTIONAL_ARG "OPTIONAL")
+    else()
+        set(FIND_OPTIONAL_ARG "")
+    endif()
+
+    cth_assert_not_empty("${TARGET_NAME}" REASON "add_uncrustify_target requires a target name")
+    
+    set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
+    cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
+
+    include(fm_tool_utilities)
+
+    cth_find_uncrustify(${FIND_OPTIONAL_ARG})
+    if(NOT UNCRUSTIFY_EXECUTABLE)
+        return()
+    endif()
+
+    set(FILE_LIST_PATH "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_files.txt")
+    string(REPLACE ";" "\n" FILES_TO_FORMAT_STR "${FILES_TO_FORMAT}")
+    file(WRITE "${FILE_LIST_PATH}" "${FILES_TO_FORMAT_STR}\n")
+
+    add_custom_target(
+        ${TARGET_NAME}
+        COMMAND ${UNCRUSTIFY_EXECUTABLE} --replace --no-backup -c uncrustify.cfg -q -F ${FILE_LIST_PATH}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting all source files with uncrustify..."
+        VERBATIM
+    )
+endfunction()
 
 
 

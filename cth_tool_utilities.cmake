@@ -114,3 +114,31 @@ function(cth_find_clang_format)
    
    set(CLANG_FORMAT_EXECUTABLE ${CLANG_FORMAT_EXECUTABLE} PARENT_SCOPE)
 endfunction()
+
+#[[.rst:
+.. command:: cth_find_uncrustify
+
+   .. code-block:: cmake
+
+      cth_find_uncrustify([OPTIONAL])
+
+   Locates a required uncrustify executable and exports its path to the parent scope.
+   If OPTIONAL is specified, does not error if uncrustify is not found.
+
+   :post: UNCRUSTIFY_EXECUTABLE is set in PARENT_SCOPE with the full path to uncrustify, or configuration terminates with FATAL_ERROR if not found and not OPTIONAL
+
+   .. seealso::
+      Use ``cth_add_uncrustify_target()`` from cth_target_utilities to create a format target.
+
+#]]
+function(cth_find_uncrustify)
+   cmake_parse_arguments(PARSE_ARGV 0 ARG "OPTIONAL" "" "")
+
+   if(ARG_OPTIONAL)
+      cth_find_program(UNCRUSTIFY_EXECUTABLE uncrustify OPTIONAL)
+   else()
+      cth_find_program(UNCRUSTIFY_EXECUTABLE uncrustify)
+   endif()
+   
+   set(UNCRUSTIFY_EXECUTABLE ${UNCRUSTIFY_EXECUTABLE} PARENT_SCOPE)
+endfunction()
