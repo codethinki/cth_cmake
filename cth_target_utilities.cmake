@@ -418,7 +418,7 @@ function(cth_add_clang_format_target TARGET_NAME)
     set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
     cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
 
-    include(fm_tool_utilities)
+    include(cth_tool_utilities)
 
     # Pass the safely stored string to the find function
     cth_find_clang_format(${FIND_OPTIONAL_ARG})
