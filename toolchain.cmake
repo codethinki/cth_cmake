@@ -20,5 +20,5 @@ if(NOT CTH_DISABLE_VCPKG_INTEGRATION)
     cth_assert_program(vcpkg HINT "$ENV{VCPKG_ROOT}")
 
     message(STATUS "handing off to vcpkg")
-    include("$ENV{VCPKG_ROOT}scripts/buildsystems/vcpkg.cmake")
+    include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 endif()
