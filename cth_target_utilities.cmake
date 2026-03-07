@@ -53,14 +53,22 @@ function(cth_glob OUT_VAR)
         set(GLOB_PATTERNS ${ARG_PATTERNS})
     endif()
 
-    if(GLOB_PATTERNS)
+    # Normalize paths to prevent CONFIGURE_DEPENDS cache mismatch issues on Windows
+    set(NORMALIZED_PATTERNS "")
+    foreach(PATTERN IN LISTS GLOB_PATTERNS)
+        cmake_path(ABSOLUTE_PATH PATTERN NORMALIZE OUTPUT_VARIABLE NORMALIZED)
+        list(APPEND NORMALIZED_PATTERNS "${NORMALIZED}")
+    endforeach()
+
+    if(NORMALIZED_PATTERNS)
         file(GLOB_RECURSE FOUND_FILES
             CONFIGURE_DEPENDS
-            ${GLOB_PATTERNS}
+            ${NORMALIZED_PATTERNS}
         )
         set(${OUT_VAR} ${${OUT_VAR}} ${FOUND_FILES} PARENT_SCOPE)
     endif()
 endfunction()
+
 
 #[[.rst:
 .. command:: cth_glob_cpp
@@ -463,7 +471,7 @@ endfunction()
       - Uncrustify will look for an uncrustify.cfg file in the working directory or rely on the UNCRUSTIFY_CONFIG environment variable.
 
    .. seealso::
-      - ``cth_find_uncrustify(OPTIONAL)`` from fm_tool_utilities to locate uncrustify optionally
+      - ``cth_find_uncrustify(OPTIONAL)`` from cth_tool_utilities to locate uncrustify optionally
 
 #]]
 function(cth_add_uncrustify_target TARGET_NAME)
@@ -481,7 +489,7 @@ function(cth_add_uncrustify_target TARGET_NAME)
     set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
     cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
 
-    include(fm_tool_utilities)
+    include(cth_tool_utilities)
 
     cth_find_uncrustify(${FIND_OPTIONAL_ARG})
     if(NOT UNCRUSTIFY_EXECUTABLE)
