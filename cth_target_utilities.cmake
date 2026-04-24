@@ -272,8 +272,10 @@ endfunction()
 
    .. note::
       BuildCache must be installed and available in PATH.
-      See the installation guide for setup instructions.
 
+   .. warning::
+      Sets the debug info format to `embedded` for msvc if buildcache is enabled
+            
    .. seealso::
       Use ``cth_enable_build_cache()`` from cth_tool_utilities to enable globally.
 
@@ -298,7 +300,10 @@ function(cth_target_enable_build_cache target)
 
     message(STATUS "BuildCache enabled for target '${target}'")
 
-    set_target_properties(${target} PROPERTIES
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+
+    set_target_properties(
+        ${target} PROPERTIES
         C_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
         CXX_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
     )

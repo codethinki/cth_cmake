@@ -27,7 +27,7 @@ function(cth_find_program OUT_VAR prog)
     find_program(${OUT_VAR} "${prog}" ${ARG_UNPARSED_ARGUMENTS})
     
     if(${OUT_VAR})
-        message(STATUS "${prog} found: ${${OUT_VAR}}")
+        message(STATUS "${prog} found")
         message(VERBOSE "${prog} location: ${${OUT_VAR}}")
         set(${OUT_VAR} "${${OUT_VAR}}" PARENT_SCOPE)
         return()
@@ -60,6 +60,7 @@ endfunction()
       For per-target control, use ``cth_target_enable_build_cache()`` instead.
 
    .. warning::
+      Sets the debug info to `embedded` on msvc builds if buildcache is enabled.
       BuildCache must be installed and available in PATH.
       The function will fail with FATAL_ERROR if buildcache is not found.
 
@@ -82,6 +83,8 @@ function(cth_enable_build_cache)
         message(STATUS "Couldn't enable BuildCache globally")
         return()
     endif()
+
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
 
     set(CMAKE_C_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
