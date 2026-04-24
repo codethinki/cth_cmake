@@ -300,7 +300,7 @@ function(cth_target_enable_build_cache target)
 
     message(STATUS "BuildCache enabled for target '${target}'")
 
-    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>" PARENT_SCOPE)
 
     set_target_properties(
         ${target} PROPERTIES
