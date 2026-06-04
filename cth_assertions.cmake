@@ -400,3 +400,46 @@ function(cth_assert_file file)
         _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
     endif()
 endfunction()
+
+#[[.rst:
+.. command:: cth_assert_integer
+
+   .. code-block:: cmake
+
+      cth_assert_integer(<value> [FATAL|WARNING] [REASON <reason>])
+
+   Asserts that a value is a valid integer string.
+
+   :param value: Value to check for integer format
+   :type value: string
+   :param FATAL: (Default) Terminate configuration with FATAL_ERROR if assertion fails
+   :param WARNING: Issue a WARNING if assertion fails
+   :param REASON: Optional error message to display if the assertion fails
+   :type REASON: string
+
+   :notes: The check uses the regular expression `^[+-]?[0-9]+$` which accepts
+           an optional leading sign followed by one or more digits.
+
+   :post: value matches the integer regex, or configuration reports failure based on level
+
+#]]
+function(cth_assert_integer value)
+    set(options FATAL WARNING)
+    set(oneValueArgs REASON)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "")
+
+    set(LEVEL FATAL_ERROR)
+    if(ARG_WARNING)
+        set(LEVEL WARNING)
+    endif()
+
+    if(NOT ARG_REASON)
+        set(ARG_REASON "Value '${value}' is not an integer")
+    endif()
+
+    string(REGEX MATCH "^[+-]?[0-9]+$" _cth_int_match "${value}")
+
+    if(NOT _cth_int_match)
+        _cth_assertion_failure(${LEVEL} "${ARG_REASON}")
+    endif()
+endfunction()

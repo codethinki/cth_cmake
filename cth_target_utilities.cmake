@@ -34,6 +34,7 @@ function(cth_glob OUT_VAR)
     set(SUB_PATHS ${ARG_UNPARSED_ARGUMENTS})
 
     set(GLOB_PATTERNS "")
+
     if(SUB_PATHS AND ARG_PATTERNS)
         # Case 1: Both paths and patterns provided - generate cross-product
         foreach(SUB_PATH IN LISTS SUB_PATHS)
@@ -55,6 +56,7 @@ function(cth_glob OUT_VAR)
 
     # Normalize paths to prevent CONFIGURE_DEPENDS cache mismatch issues on Windows
     set(NORMALIZED_PATTERNS "")
+
     foreach(PATTERN IN LISTS GLOB_PATTERNS)
         cmake_path(ABSOLUTE_PATH PATTERN NORMALIZE OUTPUT_VARIABLE NORMALIZED)
         list(APPEND NORMALIZED_PATTERNS "${NORMALIZED}")
@@ -68,7 +70,6 @@ function(cth_glob OUT_VAR)
         set(${OUT_VAR} ${${OUT_VAR}} ${FOUND_FILES} PARENT_SCOPE)
     endif()
 endfunction()
-
 
 #[[.rst:
 .. command:: cth_glob_cpp
@@ -96,7 +97,6 @@ function(cth_glob_cpp OUT_VAR)
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
 
-
 #[[.rst:
 .. command:: cth_glob_cppm
 
@@ -122,9 +122,6 @@ function(cth_glob_cppm OUT_VAR)
     cth_glob(${OUT_VAR} ${ARGN} PATTERNS "*.cppm")
     set(${OUT_VAR} ${${OUT_VAR}} PARENT_SCOPE)
 endfunction()
-
-
-
 
 #[[.rst:
 .. command:: cth_add_resources
@@ -162,16 +159,15 @@ function(cth_add_resources TARGET_NAME)
             TARGET ${TARGET_NAME}
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${ABS_RESOURCE_PATH}"
-                    # Use the original RESOURCE_PATH to preserve the structure
-                    "$<TARGET_FILE_DIR:${TARGET_NAME}>/${RESOURCE_PATH}"
+            "${ABS_RESOURCE_PATH}"
+
+            # Use the original RESOURCE_PATH to preserve the structure
+            "$<TARGET_FILE_DIR:${TARGET_NAME}>/${RESOURCE_PATH}"
             COMMENT "Copying resource directory: ${RESOURCE_PATH}"
             VERBATIM
         )
     endforeach()
 endfunction()
-
-
 
 #[[.rst:
 .. command:: cth_target_enable_sanitizers
@@ -252,8 +248,6 @@ function(cth_target_enable_sanitizers target)
     endforeach()
 endfunction()
 
-
-
 #[[.rst:
 .. command:: cth_target_enable_build_cache
 
@@ -292,7 +286,7 @@ function(cth_target_enable_build_cache target)
     else()
         cth_find_program(BUILDCACHE_PROGRAM buildcache)
     endif()
-    
+
     if(NOT BUILDCACHE_PROGRAM)
         message(STATUS "Couldn't enable BuildCache for target '${target}'")
         return()
@@ -308,8 +302,6 @@ function(cth_target_enable_build_cache target)
         CXX_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
     )
 endfunction()
-
-
 
 #[[.rst:
 .. command:: cth_target_add_modules
@@ -376,19 +368,18 @@ function(cth_target_add_modules TARGET_NAME)
 
     # 4. Private Modules
     if(ARGS_PRIVATE)
-        target_sources(${TARGET_NAME} PRIVATE 
+        target_sources(${TARGET_NAME} PRIVATE
             FILE_SET "${TARGET_NAME}_private_modules" TYPE CXX_MODULES FILES ${ARGS_PRIVATE}
         )
     endif()
 
     # 5. Public Modules
     if(ARGS_PUBLIC)
-        target_sources(${TARGET_NAME} PUBLIC 
+        target_sources(${TARGET_NAME} PUBLIC
             FILE_SET CXX_MODULES TYPE CXX_MODULES FILES ${ARGS_PUBLIC}
         )
     endif()
 endfunction()
-
 
 #[[.rst:
 .. command:: cth_add_clang_format_target
@@ -426,7 +417,7 @@ function(cth_add_clang_format_target TARGET_NAME)
     endif()
 
     cth_assert_not_empty("${TARGET_NAME}" REASON "add_clang_format_target requires a target name")
-    
+
     # Use ARG_UNPARSED_ARGUMENTS instead of ARGN so "OPTIONAL" isn't treated as a file
     set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
     cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
@@ -435,6 +426,7 @@ function(cth_add_clang_format_target TARGET_NAME)
 
     # Pass the safely stored string to the find function
     cth_find_clang_format(${FIND_OPTIONAL_ARG})
+
     if(NOT CLANG_FORMAT_EXECUTABLE)
         return()
     endif()
@@ -490,13 +482,14 @@ function(cth_add_uncrustify_target TARGET_NAME)
     endif()
 
     cth_assert_not_empty("${TARGET_NAME}" REASON "add_uncrustify_target requires a target name")
-    
+
     set(FILES_TO_FORMAT ${ARG_UNPARSED_ARGUMENTS})
     cth_assert_not_empty("${FILES_TO_FORMAT}" REASON "no files provided")
 
     include(cth_tool_utilities)
 
     cth_find_uncrustify(${FIND_OPTIONAL_ARG})
+
     if(NOT UNCRUSTIFY_EXECUTABLE)
         return()
     endif()
@@ -514,10 +507,9 @@ function(cth_add_uncrustify_target TARGET_NAME)
     )
 endfunction()
 
-
-
 function(_cth_ensure_stub_lib)
     set(stub_target "cth_link_attachment_stub")
+
     if(TARGET ${stub_target})
         return()
     endif()
@@ -528,23 +520,24 @@ function(_cth_ensure_stub_lib)
 
     # Generate dummy source
     set(stub_src "${stub_dir}/stub.c")
+
     if(NOT EXISTS "${stub_src}")
         file(WRITE "${stub_src}" "void cth_link_attachment_stub_symbol(void) {}\n")
     endif()
 
     # Create the real static library
     add_library(${stub_target} STATIC "${stub_src}")
-        
+
     # FORCE the output location to be flat.
-    set_target_properties(${stub_target} PROPERTIES 
+    set_target_properties(${stub_target} PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${stub_dir}"
         OUTPUT_NAME "cth_link_attachment_stub"
     )
-        
+
     if(CMAKE_CONFIGURATION_TYPES)
         foreach(config ${CMAKE_CONFIGURATION_TYPES})
             string(TOUPPER "${config}" config_upper)
-            set_target_properties(${stub_target} PROPERTIES 
+            set_target_properties(${stub_target} PROPERTIES
                 ARCHIVE_OUTPUT_DIRECTORY_${config_upper} "${stub_dir}"
             )
         endforeach()
@@ -585,10 +578,10 @@ function(cth_target_attach_dependency target mode)
     )
 
     _cth_ensure_stub_lib()
-    
+
     set(stub_dir "${CMAKE_BINARY_DIR}/_cth_internal")
     set(
-        stub_lib_path 
+        stub_lib_path
         "${stub_dir}/${CMAKE_STATIC_LIBRARY_PREFIX}cth_link_attachment_stub${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
 
@@ -596,38 +589,38 @@ function(cth_target_attach_dependency target mode)
         # Resolve full path immediately
         get_filename_component(abs_path "${file_path}" ABSOLUTE)
         get_filename_component(file_name "${file_path}" NAME)
-        
+
         # Generate unique target name
         string(MD5 path_hash "${abs_path}")
         set(leaf_target_name "_${target}_${mode}_${path_hash}")
 
         if(NOT TARGET ${leaf_target_name})
-            
             # --- PLATFORM LOGIC ---
             if(WIN32)
                 # Windows: Always SHARED IMPORTED.
                 add_library(${leaf_target_name} SHARED IMPORTED GLOBAL)
-                set_target_properties(${leaf_target_name} PROPERTIES 
+                set_target_properties(${leaf_target_name} PROPERTIES
                     IMPORTED_LOCATION "${abs_path}"
                 )
 
                 if(mode STREQUAL "NOLINK")
                     # NOLINK: Point IMPLIB to the dummy stub.
-                    set_target_properties(${leaf_target_name} PROPERTIES 
+                    set_target_properties(${leaf_target_name} PROPERTIES
                         IMPORTED_IMPLIB "${stub_lib_path}"
                     )
+
                     # Ensure stub is built before linking
                     add_dependencies(${leaf_target_name} cth_stub_lib)
                 else()
                     # LINK: Calculate the real import library path.
                     get_filename_component(dir_name "${abs_path}" DIRECTORY)
                     get_filename_component(name_we "${abs_path}" NAME_WE)
-                    
+
                     # Construct path: dir / [prefix]filename[suffix]
                     set(implib_path "${dir_name}/${CMAKE_IMPORT_LIBRARY_PREFIX}${name_we}${CMAKE_IMPORT_LIBRARY_SUFFIX}")
-                    
+
                     if(EXISTS "${implib_path}")
-                        set_target_properties(${leaf_target_name} PROPERTIES 
+                        set_target_properties(${leaf_target_name} PROPERTIES
                             IMPORTED_IMPLIB "${implib_path}"
                         )
                     else()
@@ -636,7 +629,7 @@ function(cth_target_attach_dependency target mode)
                 endif()
 
             else()
-                # Unix/macOS: 
+                # Unix/macOS:
                 # NOLINK -> MODULE (Loadable, not linked)
                 # LINK   -> SHARED (Linked)
                 if(mode STREQUAL "NOLINK")
@@ -644,12 +637,11 @@ function(cth_target_attach_dependency target mode)
                 else()
                     add_library(${leaf_target_name} SHARED IMPORTED GLOBAL)
                 endif()
-                
-                set_target_properties(${leaf_target_name} PROPERTIES 
+
+                set_target_properties(${leaf_target_name} PROPERTIES
                     IMPORTED_LOCATION "${abs_path}"
                 )
             endif()
-
         endif()
 
         # Link the imported target to the main target
@@ -657,8 +649,6 @@ function(cth_target_attach_dependency target mode)
     endforeach()
 endfunction()
 
-
-    
 #[[.rst:
 .. command:: cth_target_copy_dependencies
 
@@ -685,10 +675,12 @@ function(cth_target_copy_dependencies target)
     )
 
     get_target_property(_registered ${target} _CTH_COPY_DEPS_REGISTERED)
+
     if(_registered)
         message(WARNING "cth_target_copy_dependencies(${target}) called multiple times!")
         return()
     endif()
+
     set_property(TARGET ${target} PROPERTY _CTH_COPY_DEPS_REGISTERED TRUE)
 
     set(RETRY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${target}_copy_retry_$<CONFIG>.cmake")
@@ -744,3 +736,45 @@ function(cth_target_copy_dependencies target)
         COMMENT "Propagating runtime dependencies for ${target} ..."
     )
 endfunction()
+
+#[[.rst:
+.. command:: cth_target_set_constexpr_steps
+
+   .. code-block:: cmake
+
+      cth_target_set_constexpr_steps(<target> <number>)
+
+   Sets the number as constexpr steps for MSVC, CLANG and GCC
+
+   :param target: The target to copy dependencies for.
+   :type target: string
+
+   :param number: number of constexpr steps
+   :type target: integer
+
+   :pre: ``target`` must exist.
+   :pre: ``number`` must not be empty.
+   :post: max constexpr steps set for the target
+#]]
+function(cth_target_set_constexpr_steps target number)
+    cth_assert_target(${target})
+    cth_assert_integer(${number} REASON "constexpr steps must be an integer")
+
+    # 1. Choose the correct flag for Clang / clang-cl
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # If the frontend is MSVC (clang-cl), we must use the /clang: prefix
+        if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" OR(WIN32 AND MSVC))
+            set(CLANG_CONSTEXPR_FLAG "/clang:-fconstexpr-steps=${number}")
+        else()
+            # Standard Clang (0 = unlimited steps)
+            set(CLANG_CONSTEXPR_FLAG "-fconstexpr-steps=${number}")
+        endif()
+    endif()
+
+    # 2. Apply the flags to the target
+    target_compile_options(${target} PRIVATE
+        $<$<CXX_COMPILER_ID:Clang>:${CLANG_CONSTEXPR_FLAG}>
+        $<$<CXX_COMPILER_ID:GNU>:-fconstexpr-ops-limit=${number}>
+        $<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps${number}>
+    )
+endfunction(cth_target_set_constexpr_steps target number)
