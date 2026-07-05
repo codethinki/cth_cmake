@@ -26,7 +26,10 @@ function(cth_set_compiler_specifics)
    message("Using compiler ${CMAKE_CXX_COMPILER}")
 
    if(MSVC)
-      add_compile_options(/utf-8)
+      add_compile_options(
+         $<$<COMPILE_LANGUAGE:CXX>:/utf-8>
+         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/utf-8>
+      )
    else()
       add_compile_options(-fexceptions)
    endif()
@@ -64,7 +67,7 @@ endfunction()
 macro(cth_set_latest_c_cpp_standard)
    if(MSVC)
       set(CMAKE_CXX_STANDARD 23)
-      add_compile_options(/std:c++latest)
+      add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>)
    else()
       set(CMAKE_CXX_STANDARD 26)
    endif()
