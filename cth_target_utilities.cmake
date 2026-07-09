@@ -577,6 +577,17 @@ function(cth_target_attach_dependency target mode)
         "${mode}" MATCHES "^(LINK|NOLINK)$"
     )
 
+    # IMPORTED targets have no private/compiled component of their own -- CMake only allows the
+    # INTERFACE keyword of target_link_libraries() for them (PUBLIC/PRIVATE hard-error). Everything
+    # attached here ends up in INTERFACE_LINK_LIBRARIES either way, so this just picks the keyword
+    # CMake will actually accept for the given target.
+    get_target_property(_cth_target_is_imported ${target} IMPORTED)
+    if(_cth_target_is_imported)
+        set(_cth_link_scope INTERFACE)
+    else()
+        set(_cth_link_scope PRIVATE)
+    endif()
+
     _cth_ensure_stub_lib()
 
     set(stub_dir "${CMAKE_BINARY_DIR}/_cth_internal")
@@ -610,7 +621,7 @@ function(cth_target_attach_dependency target mode)
                     )
 
                     # Ensure stub is built before linking
-                    add_dependencies(${leaf_target_name} cth_stub_lib)
+                    add_dependencies(${leaf_target_name} cth_link_attachment_stub)
                 else()
                     # LINK: Calculate the real import library path.
                     get_filename_component(dir_name "${abs_path}" DIRECTORY)
@@ -645,7 +656,7 @@ function(cth_target_attach_dependency target mode)
         endif()
 
         # Link the imported target to the main target
-        target_link_libraries(${target} PRIVATE ${leaf_target_name})
+        target_link_libraries(${target} ${_cth_link_scope} ${leaf_target_name})
     endforeach()
 endfunction()
 

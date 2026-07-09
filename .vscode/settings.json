@@ -3,5 +3,6 @@
     "cSpell.words": [
         "buildcache",
         "endforeach"
-    ]
+    ],
+    "cmake.sourceDirectory": "E:/cs/code/cpp/repo/cth_cmake/examples/basic"
 }
