@@ -519,10 +519,10 @@ function(_cth_ensure_stub_lib)
     file(MAKE_DIRECTORY "${stub_dir}")
 
     # Generate dummy source
-    set(stub_src "${stub_dir}/stub.c")
+    set(stub_src "${stub_dir}/stub.cpp")
 
     if(NOT EXISTS "${stub_src}")
-        file(WRITE "${stub_src}" "void cth_link_attachment_stub_symbol(void) {}\n")
+        file(WRITE "${stub_src}" "void cth_link_attachment_stub_symbol() {}\n")
     endif()
 
     # Create the real static library
