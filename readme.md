@@ -41,8 +41,9 @@ To help you set up targets and dependencies quicker:
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
   - `cth_target_enable_build_cache` — enable per-target build-cache integration ([installation](#optional))
   - `cth_add_clang_format_target` — create a "format" target that runs clang-format on specified source files
-  - `cth_target_attach_dependency` — attach external file dependencies (like DLLs) to a target for tracking.
-  - `cth_target_copy_dependencies` — copy runtime dependencies to the target's output directory post-build.
+  - `cth_target_attach_link_dependency` — attach external shared libraries to a target as linked imported targets.
+  - `cth_target_attach_copy_dependency` — attach files that must ship next to consuming executables, structure-preserved, propagated through the link chain.
+  - `cth_target_copy_dependencies` — copy runtime dependencies and attached copy dependencies to the target's output directory post-build.
 
 ## cth_install_utilities
 **Ever wanted to create a cmake installable package?**  
