@@ -37,6 +37,7 @@ To help you set up targets and dependencies quicker:
   - `cth_glob_cpp` — recursive glob for common C++ source/header/file-set extensions and append results to a variable.
   - `cth_glob_cppm` — recursive glob for C++ module interface files (.cppm). 
   - `cth_add_resources` — add a POST_BUILD step to copy resource directories next to a target's binary.
+  - `cth_target_alias_any` — alias the first existing target of several candidates (e.g. `hv` / `hv_static` depending on the linkage).
   - `cth_target_add_modules` — add C++ module files to a target with PUBLIC/PRIVATE visibility.
   - `cth_target_enable_sanitizers` — enable Address/Undefined sanitizers for specified targets/configurations.
   - `cth_target_enable_build_cache` — enable per-target build-cache integration ([installation](#optional))

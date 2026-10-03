@@ -876,3 +876,65 @@ function(cth_target_set_constexpr_steps target number)
         $<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps${number}>
     )
 endfunction(cth_target_set_constexpr_steps target number)
+#[[.rst:
+.. command:: cth_target_alias_any
+
+   .. code-block:: cmake
+
+      cth_target_alias_any(<alias> <candidates...>)
+
+   Creates ``<alias>`` as an ALIAS of the first target in ``<candidates>`` that exists.
+
+   Packages do not always export the same target name in every configuration. vcpkg's libhv for
+   example exports ``hv`` when built as a shared library and ``hv_static`` when built as a static
+   one. Linking the alias keeps that choice out of every ``target_link_libraries`` call.
+
+   :param alias: Name of the alias target to create
+   :type alias: string
+   :param candidates: Target names to choose from, in order of preference
+   :type candidates: list of strings
+
+   :pre: alias is not a target yet
+   :pre: at least one of the candidates is a target
+   :post: alias is an ALIAS of the first existing candidate
+
+   .. code-block:: cmake
+
+      find_package(libhv CONFIG REQUIRED)
+      cth_target_alias_any(libhv::hv hv hv_static)
+
+      target_link_libraries(my_target PRIVATE libhv::hv)
+
+   .. note::
+      Candidates are checked in the given order, the first existing target wins. If that candidate
+      is an ALIAS itself, the new alias refers to the target behind it.
+
+   .. note::
+      ``find_package`` creates non-global imported targets. An alias of such a target is only
+      visible in the directory that created it and its subdirectories, same as the imported target.
+
+   .. warning::
+      Installed export sets record the aliased target, not the alias. Consumers of an installed
+      package need the same target that was picked at configure time.
+
+#]]
+function(cth_target_alias_any ALIAS_NAME)
+    cth_assert_not_target("${ALIAS_NAME}" REASON "cth_target_alias_any: alias '${ALIAS_NAME}' already exists")
+    cth_assert_not_empty("${ARGN}" REASON "cth_target_alias_any: no candidates given for '${ALIAS_NAME}'")
+
+    foreach(CANDIDATE IN LISTS ARGN)
+        if(NOT TARGET ${CANDIDATE})
+            continue()
+        endif()
+
+        get_target_property(ALIASED_TARGET ${CANDIDATE} ALIASED_TARGET)
+        if(ALIASED_TARGET)
+            set(CANDIDATE ${ALIASED_TARGET})
+        endif()
+
+        add_library(${ALIAS_NAME} ALIAS ${CANDIDATE})
+        return()
+    endforeach()
+
+    message(FATAL_ERROR "ERROR cth_target_alias_any: none of the candidates is a target [args: ${ARGV}]")
+endfunction()
