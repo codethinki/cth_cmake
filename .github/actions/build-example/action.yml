@@ -1,0 +1,30 @@
+name: 'Build Example'
+description: 'Configures and builds an example, fails on CMake warnings'
+inputs:
+  example:
+    description: 'Example directory in examples/'
+    required: true
+  preset:
+    description: 'CI preset from ci/CMakeUserPresets.json'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # --- 1. configure ---
+    - name: Configure CMake
+      shell: bash
+      working-directory: examples/${{ inputs.example }}
+      run: |
+        cp ../../ci/CMakeUserPresets.json CMakeUserPresets.json
+        cmake --preset ${{ inputs.preset }} 2>&1 | tee "$RUNNER_TEMP/configure-${{ inputs.example }}.log"
+        if grep -n "CMake Warning" "$RUNNER_TEMP/configure-${{ inputs.example }}.log"; then
+          echo "::error::CMake warnings while configuring ${{ inputs.example }}"
+          exit 1
+        fi
+
+    # --- 2. build ---
+    - name: Build
+      shell: bash
+      working-directory: examples/${{ inputs.example }}
+      run: cmake --build --preset ${{ inputs.preset }}

@@ -1,0 +1,116 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "ci-vcpkg",
+      "hidden": true,
+      "cacheVariables": {
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed"
+      },
+      "environment": {
+        "VCPKG_BINARY_SOURCES": "clear;nuget,GitHub,readwrite"
+      }
+    },
+    {
+      "name": "ci-config-base",
+      "hidden": true,
+      "inherits": [
+        "ci-vcpkg",
+        "cth_cmake"
+      ],
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_COMPILE_WARNING_AS_ERROR": "ON"
+      }
+    },
+    {
+      "name": "ci_linux_gcc",
+      "inherits": "ci-config-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "ci_linux_clang",
+      "inherits": "ci-config-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "ci_windows_msvc",
+      "inherits": "ci-config-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "ci_windows_clang",
+      "inherits": "ci-config-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ci-build-base",
+      "hidden": true,
+      "configuration": "Release"
+    },
+    {
+      "name": "ci_linux_gcc",
+      "configurePreset": "ci_linux_gcc",
+      "inherits": "ci-build-base"
+    },
+    {
+      "name": "ci_linux_clang",
+      "configurePreset": "ci_linux_clang",
+      "inherits": "ci-build-base"
+    },
+    {
+      "name": "ci_windows_msvc",
+      "configurePreset": "ci_windows_msvc",
+      "inherits": "ci-build-base"
+    },
+    {
+      "name": "ci_windows_clang",
+      "configurePreset": "ci_windows_clang",
+      "inherits": "ci-build-base"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "ci-test-base",
+      "hidden": true,
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "ci_linux_gcc",
+      "configurePreset": "ci_linux_gcc",
+      "inherits": "ci-test-base"
+    },
+    {
+      "name": "ci_linux_clang",
+      "configurePreset": "ci_linux_clang",
+      "inherits": "ci-test-base"
+    },
+    {
+      "name": "ci_windows_msvc",
+      "configurePreset": "ci_windows_msvc",
+      "inherits": "ci-test-base"
+    },
+    {
+      "name": "ci_windows_clang",
+      "configurePreset": "ci_windows_clang",
+      "inherits": "ci-test-base"
+    }
+  ]
+}

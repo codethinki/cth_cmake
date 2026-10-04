@@ -1,0 +1,17 @@
+name: 'Test Example'
+description: 'Runs CTest of an example with the given CI test preset'
+inputs:
+  example:
+    description: 'Example directory in examples/'
+    required: true
+  preset:
+    description: 'CI preset from ci/CMakeUserPresets.json'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Test
+      shell: bash
+      working-directory: examples/${{ inputs.example }}
+      run: ctest --preset ${{ inputs.preset }}

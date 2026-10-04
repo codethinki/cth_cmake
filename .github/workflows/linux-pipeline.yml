@@ -1,0 +1,70 @@
+name: Linux Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      compiler:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  prepare:
+    name: Build Container
+    runs-on: ubuntu-latest
+    outputs:
+      container-image-adress: ${{ steps.build.outputs.container-image-adress }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: build
+        name: Build & Push
+        uses: ./.github/actions/build-container
+        with:
+          dockerfile: ci/docker/linux/Dockerfile
+          tag: linux-container
+
+  build:
+    name: Linux (${{ inputs.compiler }})
+    needs: prepare
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.prepare.outputs.container-image-adress }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+      options: >-
+        -v /usr/local/share/vcpkg:/vcpkg
+        -e VCPKG_ROOT=/vcpkg
+      env:
+        VCPKG_ROOT: /vcpkg
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-vcpkg-cache
+
+      - name: Build basic
+        uses: ./.github/actions/build-example
+        with:
+          example: basic
+          preset: ci_linux_${{ inputs.compiler }}
+
+      - name: Test basic
+        uses: ./.github/actions/test-example
+        with:
+          example: basic
+          preset: ci_linux_${{ inputs.compiler }}
+
+      - name: Build modules
+        uses: ./.github/actions/build-example
+        with:
+          example: modules
+          preset: ci_linux_${{ inputs.compiler }}
+
+      - name: Test modules
+        uses: ./.github/actions/test-example
+        with:
+          example: modules
+          preset: ci_linux_${{ inputs.compiler }}
