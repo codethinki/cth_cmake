@@ -345,6 +345,7 @@ endfunction()
    :type args: optional arguments
 
    :post: program found or configuration reports failure based on level
+   :post: ``<PROG>_PROGRAM`` is cached and set in PARENT_SCOPE (upper case, e.g. ``CLANG_FORMAT_PROGRAM``)
 #]]
 function(cth_assert_program prog)
     set(options FATAL WARNING)
@@ -356,13 +357,18 @@ function(cth_assert_program prog)
         set(LEVEL_FLAG WARNING)
     endif()
 
-    find_program(TEMP "${prog}" ${ARG_UNPARSED_ARGUMENTS})
+    string(MAKE_C_IDENTIFIER "${prog}" PROG_ID)
+    string(TOUPPER "${PROG_ID}_PROGRAM" PROG_VAR)
+
+    find_program(${PROG_VAR} "${prog}" ${ARG_UNPARSED_ARGUMENTS})
     
     if(NOT ARG_REASON)
         set(ARG_REASON "Program '${prog}' not found")
     endif()
     
-    cth_assert_true(TEMP ${LEVEL_FLAG} REASON "${ARG_REASON}")
+    cth_assert_true(${PROG_VAR} ${LEVEL_FLAG} REASON "${ARG_REASON}")
+
+    set(${PROG_VAR} "${${PROG_VAR}}" PARENT_SCOPE)
 endfunction()
 
 #[[.rst:
