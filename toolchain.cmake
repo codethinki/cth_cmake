@@ -16,8 +16,8 @@ include(cth_tool_utilities)
 #delegate to vcpkg
 if(NOT CTH_DISABLE_VCPKG_INTEGRATION)
 
-    cth_assert_not_empty("$ENV{VCPKG_ROOT}")
-    cth_assert_program(vcpkg HINT "$ENV{VCPKG_ROOT}")
+    cth_assert_not_empty("$ENV{VCPKG_ROOT}" REASON "VCPKG_ROOT is not set, point it at your vcpkg directory or set CTH_DISABLE_VCPKG_INTEGRATION")
+    cth_assert_program(vcpkg HINTS "$ENV{VCPKG_ROOT}" REASON "vcpkg not found in VCPKG_ROOT ($ENV{VCPKG_ROOT}), run bootstrap-vcpkg there")
 
     message(STATUS "handing off to vcpkg")
     include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
