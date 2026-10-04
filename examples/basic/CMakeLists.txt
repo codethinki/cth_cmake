@@ -25,3 +25,6 @@ target_include_directories(
 )
 
 target_link_libraries(basic_example_exec PRIVATE range-v3)
+
+enable_testing()
+add_test(NAME basic_example_exec COMMAND basic_example_exec)
