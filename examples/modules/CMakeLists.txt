@@ -19,6 +19,5 @@ message(STATUS "found sources: ${SRC}")
 
 cth_target_add_modules(modules_executable PUBLIC ${MODULES_SRC})
 
-
-
-
+enable_testing()
+add_test(NAME modules_executable COMMAND modules_executable)

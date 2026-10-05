@@ -1,6 +1,6 @@
 # cth cmake
 
-[![Tests](https://github.com/codethinki/cth_cmake/actions/workflows/ci.yml/badge.svg)](https://github.com/codethinki/cth_cmake/actions/workflows/ci.yml)
+[![Build & Test](https://github.com/codethinki/cth_cmake/actions/workflows/build-test.yml/badge.svg)](https://github.com/codethinki/cth_cmake/actions/workflows/build-test.yml)
 
 This is an opinionated cross-platform c++ cmake utility library to enable quicker and safer use of cmake. 
 
