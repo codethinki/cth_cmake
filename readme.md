@@ -57,7 +57,7 @@ Now made easy, just build the `<main-component>_package` target and you are good
 
 **This has naming implications**, subcomponents should be named `<main-component>_<subcomponent>` to be installable via `<main-component>::<subcomponent>`.
 
-This will also create additional cmake targets but dont worry about it.
+This will create additional cmake target.
 
 ## cth_setup_utilities
 this is more or less for me, very handy but no backwards compatibility guaranteed
