@@ -38,7 +38,7 @@ runs:
         & "c:\llvm\$name\bin\clang++.exe" --version
         echo "c:\llvm\$name\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: "3.x"
 

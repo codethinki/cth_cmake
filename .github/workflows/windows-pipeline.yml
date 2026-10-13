@@ -20,7 +20,7 @@ jobs:
         shell: bash # Forces Git Bash for consistency with Linux scripts
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-windows
         with:

@@ -18,7 +18,7 @@ jobs:
     outputs:
       container-image-adress: ${{ steps.build.outputs.container-image-adress }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: build
         name: Build & Push
         uses: ./.github/actions/build-container
@@ -41,7 +41,7 @@ jobs:
       env:
         VCPKG_ROOT: /vcpkg
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-vcpkg-cache
 
