@@ -620,6 +620,11 @@ function(_cth_add_pkg_target)
         add_executable(${INSTALL_TARGET_NAME} ${PKG_DUMMY_SOURCE})
     endif()
 
+    # a parent project that adds this project with add_subdirectory() does not install it on every build
+    if(NOT PROJECT_IS_TOP_LEVEL)
+        set_target_properties(${INSTALL_TARGET_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+
     # --- guard: packaging into the default install prefix is almost never intended ---
     set(PKG_GUARD_SCRIPT "${CMAKE_BINARY_DIR}/_pkg_prefix_guard.cmake")
     set(PKG_PREFIX_IS_DEFAULT FALSE)
@@ -668,6 +673,8 @@ endfunction()
 
    .. note::
       After calling this, build the ``${PROJECT_NAME}_package`` target to create the package.
+      Only the top level project builds it with ``all``, a parent project that adds this project with
+      ``add_subdirectory()`` does not install it on every build.
 
    .. note::
       **Consumer usage:** ``find_package(${PROJECT_NAME} CONFIG REQUIRED COMPONENTS <comp>...)``

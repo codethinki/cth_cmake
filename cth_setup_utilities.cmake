@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Lukas Thomann
 # Licensed under the MIT License
 
+include(cth_assertions)
+
 #[[.rst:
 .. command:: cth_set_compiler_specifics
 
@@ -79,3 +81,58 @@ macro(cth_set_latest_c_cpp_standard)
 
    message("Set cxx standard to ${CMAKE_CXX_STANDARD}")
 endmacro()
+
+#[=[.rst:
+.. command:: cth_add_subdirectory
+
+   .. code-block:: cmake
+
+      cth_add_subdirectory(<dir> [<option> [<default>]])
+
+   Adds a subdirectory, optionally behind an option. A parent project turns parts of a library off
+   by setting the options before it adds the library.
+
+   :param dir: Subdirectory to add, as for ``add_subdirectory()``
+   :type dir: path
+   :param option: Option that controls the subdirectory, omitted -> the subdirectory is always added
+   :type option: string
+   :param default: Value of the option if nothing sets it: ON, OFF or a variable name, evaluated with ``if()``
+                   (default: ON)
+   :type default: boolean or variable name
+
+   :post: the subdirectory is added if ``option`` is ON or omitted
+
+   .. note::
+      Policy CMP0077 is NEW: a normal variable wins over the cache option,
+      ``set(<option> OFF)`` before ``add_subdirectory(<library>)`` is enough.
+
+   .. note::
+      Pass a variable by name, ``WIN32`` instead of ``${WIN32}``: an undefined variable is OFF,
+      its empty expansion would drop the argument and leave the default ON.
+
+#]=]
+function(cth_add_subdirectory dir)
+   cth_assert_true(${ARGC} LESS_EQUAL 3 REASON "cth_add_subdirectory(<dir> [<option> [<default>]]), got: ${ARGV}")
+
+   if(ARGC EQUAL 1)
+      add_subdirectory("${dir}")
+      return()
+   endif()
+
+   set(option "${ARGV1}")
+   set(default ON)
+   if(ARGC EQUAL 3)
+      set(default OFF)
+      # unquoted: a variable name is dereferenced, an empty argument is OFF
+      if(NOT "${ARGV2}" STREQUAL "")
+         if(${ARGV2})
+            set(default ON)
+         endif()
+      endif()
+   endif()
+
+   option(${option} "add the ${dir} subdirectory" ${default})
+   if(${option})
+      add_subdirectory("${dir}")
+   endif()
+endfunction()
