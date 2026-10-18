@@ -1,0 +1,1 @@
+add_library(basic_example_optional INTERFACE)

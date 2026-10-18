@@ -26,5 +26,20 @@ target_include_directories(
 
 target_link_libraries(basic_example_exec PRIVATE range-v3)
 
+
+#optional subdirectories
+cth_add_subdirectory(optional BASIC_EXAMPLE_OPTIONAL)
+cth_assert_target(basic_example_optional REASON "cth_add_subdirectory must add a subdirectory that is ON")
+
+set(BASIC_EXAMPLE_TRUE TRUE)
+cth_add_subdirectory(enabled BASIC_EXAMPLE_ENABLED BASIC_EXAMPLE_TRUE)
+cth_assert_target(basic_example_enabled REASON "cth_add_subdirectory must evaluate a variable default")
+
+cth_add_subdirectory(unused BASIC_EXAMPLE_UNUSED_DEFAULT OFF)
+cth_add_subdirectory(unused BASIC_EXAMPLE_UNUSED_UNDEFINED BASIC_EXAMPLE_UNDEFINED)
+
+set(BASIC_EXAMPLE_UNUSED_SET OFF)
+cth_add_subdirectory(unused BASIC_EXAMPLE_UNUSED_SET)
+
 enable_testing()
 add_test(NAME basic_example_exec COMMAND basic_example_exec)

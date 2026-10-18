@@ -64,6 +64,7 @@ this is more or less for me, very handy but no backwards compatibility guarantee
 
   - `cth_set_compiler_specifics`: apply compiler-specific common flags (MSVC vs others).
   - `cth_set_latest_c_cpp_standard` (macro): prefer the newest supported C/C++ standard and set related policy/flags.
+  - `cth_add_subdirectory`: add a subdirectory behind an option (default ON, OFF or a variable like `WIN32`), a parent project turns parts of a library off with `set(<option> OFF)`.
 
 
 ## cth_tool_utilities
