@@ -52,6 +52,7 @@ Now made easy, just build the `<main-component>_package` target and you are good
 
   - `cth_pkg_target_add_modules`: add C++ module file-sets to a target (via `cth_target_add_modules`) and register it for installation.
   - `cth_pkg_target_find_package`: wrap `find_package` and record the dependency for generated package config files.
+  - `cth_pkg_add_find_modules`: register `Find<Package>.cmake` modules for dependencies without a CMake package, installed with the package and used by its config.
   - `cth_pkg_target_include_directories`: configure target include directories with appropriate install interfaces.
   - `cth_create_package`: finalize export sets, generate config/version files, and create the package target.
 
