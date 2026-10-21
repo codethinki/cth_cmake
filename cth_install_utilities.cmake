@@ -108,6 +108,53 @@ find_dependency(${ARGS_STR})
 endfunction()
 
 #[[.rst:
+.. command:: cth_pkg_add_find_modules
+
+   .. code-block:: cmake
+
+      cth_pkg_add_find_modules(<files>...)
+
+   Registers find modules (``Find<Package>.cmake``) for dependencies that install no CMake package,
+   so that both the build and the consumers of the installed package find them.
+
+   :param files: Find module files, relative to ``CMAKE_CURRENT_SOURCE_DIR`` or absolute
+   :type files: list of file paths
+
+   :pre: Every file exists and is named ``Find<Package>.cmake``
+   :post: The directories of the files are in ``CMAKE_MODULE_PATH`` of the calling directory, so a following
+          ``cth_pkg_target_find_package(<target> <Package> MODULE ...)`` finds them
+   :post: ``cth_create_package()`` installs the files next to the generated Config.cmake, which adds its own
+          directory to ``CMAKE_MODULE_PATH`` while it loads the dependencies
+
+   .. note::
+      The generated Config.cmake appends its directory, so a consumer's own ``Find<Package>.cmake`` wins,
+      and it restores the consumer's ``CMAKE_MODULE_PATH`` at its end.
+
+#]]
+function(cth_pkg_add_find_modules)
+    cth_assert_not_empty("${ARGN}" REASON "cth_pkg_add_find_modules: no find module files given")
+
+    set(MODULE_DIRS "")
+    foreach(FILE ${ARGN})
+        cmake_path(ABSOLUTE_PATH FILE BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" NORMALIZE OUTPUT_VARIABLE FILE_PATH)
+        cth_assert_file("${FILE_PATH}" REASON "cth_pkg_add_find_modules: find module '${FILE_PATH}' does not exist")
+
+        cmake_path(GET FILE_PATH FILENAME FILE_NAME)
+        if(NOT FILE_NAME MATCHES "^Find.+\\.cmake$")
+            message(FATAL_ERROR "cth_pkg_add_find_modules: '${FILE_NAME}' is not named Find<Package>.cmake")
+        endif()
+
+        cmake_path(GET FILE_PATH PARENT_PATH FILE_DIR)
+        list(APPEND MODULE_DIRS "${FILE_DIR}")
+        set_property(GLOBAL APPEND PROPERTY _CTH_PKG_FIND_MODULES "${FILE_PATH}")
+    endforeach()
+
+    list(APPEND CMAKE_MODULE_PATH ${MODULE_DIRS})
+    list(REMOVE_DUPLICATES CMAKE_MODULE_PATH)
+    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
+endfunction()
+
+#[[.rst:
 .. command:: cth_pkg_target_include_directories
 
    .. code-block:: cmake
@@ -455,6 +502,18 @@ function(_cth_setup_package)
     set(CONFIG_CONTENT "@PACKAGE_INIT@\n\n")
     string(APPEND CONFIG_CONTENT "include(CMakeFindDependencyMacro)\n\n")
 
+    # (a) find modules of dependencies without a CMake package lie next to the config, see cth_pkg_add_find_modules()
+    get_property(FIND_MODULES GLOBAL PROPERTY _CTH_PKG_FIND_MODULES)
+    if(FIND_MODULES)
+        list(REMOVE_DUPLICATES FIND_MODULES)
+        install(FILES ${FIND_MODULES} DESTINATION ${INSTALL_CONFIG_DIR})
+
+        string(APPEND CONFIG_CONTENT
+            "set(${VAR_PREFIX}module_path \"\${CMAKE_MODULE_PATH}\")\n"
+            "list(APPEND CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}\")\n\n"
+        )
+    endif()
+
     # (b) literal list of every known component, dependency-first
     string(APPEND CONFIG_CONTENT "set(${VAR_PREFIX}all_components \"${SORTED_COMPONENTS}\")\n")
 
@@ -558,6 +617,11 @@ function(_cth_setup_package)
 
     # (i) check_required_components() reads the ${PROJECT_NAME}_FOUND / *_<component>_FOUND flags
     # set above and fails appropriately for FIND_REQUIRED / non-QUIET consumers.
+    # (a, cont'd) restore the module path of the consumer
+    if(FIND_MODULES)
+        string(APPEND CONFIG_CONTENT "set(CMAKE_MODULE_PATH \"\${${VAR_PREFIX}module_path}\")\n\n")
+    endif()
+
     string(APPEND CONFIG_CONTENT "check_required_components(${PROJECT_NAME})\n")
 
     set(TEMP_CONFIG_IN_PATH "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
