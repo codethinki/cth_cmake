@@ -60,7 +60,7 @@ endfunction()
       - Sets C++ standard to C++26 (experimental)
 
    .. note::
-      C standard is set to match the C++ standard version.
+      C standard is C23 on every compiler, MSVC gets ``-std:clatest``.
 
    .. warning::
       This is a macro, not a function. Variables are set in the calling scope.
@@ -74,7 +74,8 @@ macro(cth_set_latest_c_cpp_standard)
       set(CMAKE_CXX_STANDARD 26)
    endif()
 
-   set(CMAKE_C_STANDARD ${CMAKE_CXX_STANDARD})
+   # C has no 26, cmake maps 23 to -std:clatest for MSVC
+   set(CMAKE_C_STANDARD 23)
 
    set(CMAKE_CXX_STANDARD_REQUIRED ON)
    set(CMAKE_CXX_EXTENSIONS OFF)
