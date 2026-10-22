@@ -60,7 +60,7 @@ endfunction()
       - Sets C++ standard to C++26 (experimental)
 
    .. note::
-      C standard is set to match the C++ standard version.
+      C standard: C17 for MSVC, C23 for other compilers. C has no 26, a copy of the C++ standard fails.
 
    .. warning::
       This is a macro, not a function. Variables are set in the calling scope.
@@ -70,11 +70,11 @@ macro(cth_set_latest_c_cpp_standard)
    if(MSVC)
       set(CMAKE_CXX_STANDARD 23)
       add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>)
+      set(CMAKE_C_STANDARD 17)
    else()
       set(CMAKE_CXX_STANDARD 26)
+      set(CMAKE_C_STANDARD 23)
    endif()
-
-   set(CMAKE_C_STANDARD ${CMAKE_CXX_STANDARD})
 
    set(CMAKE_CXX_STANDARD_REQUIRED ON)
    set(CMAKE_CXX_EXTENSIONS OFF)
