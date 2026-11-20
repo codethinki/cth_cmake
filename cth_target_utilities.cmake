@@ -323,7 +323,9 @@ endfunction()
       BuildCache must be installed and available in PATH.
 
    .. warning::
-      Sets the debug info format to `embedded` for msvc if buildcache is enabled
+      Sets the debug info format to `embedded` for msvc if buildcache is enabled.
+      Adds ``-Xclang -fno-pch-timestamp`` to the clang C++ compiles of the target: a clang precompiled header
+      stores the mtimes of its headers, a cached one fails against a fresh checkout.
             
    .. seealso::
       Use ``cth_enable_build_cache()`` from cth_tool_utilities to enable globally.
@@ -356,6 +358,9 @@ function(cth_target_enable_build_cache target)
         C_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
         CXX_COMPILER_LAUNCHER "${BUILDCACHE_PROGRAM}"
     )
+
+    # a clang precompiled header stores the mtimes of its headers: a cached one fails against a fresh checkout
+    target_compile_options(${target} PRIVATE "$<$<COMPILE_LANG_AND_ID:CXX,Clang>:SHELL:-Xclang -fno-pch-timestamp>")
 endfunction()
 
 #[[.rst:

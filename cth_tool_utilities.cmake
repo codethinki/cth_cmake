@@ -61,6 +61,8 @@ endfunction()
 
    .. warning::
       Sets the debug info to `embedded` on msvc builds if buildcache is enabled.
+      Adds ``-Xclang -fno-pch-timestamp`` to clang C++ compiles: a clang precompiled header stores the mtimes
+      of its headers, a cached one fails against a fresh checkout.
       BuildCache must be installed and available in PATH.
       The function will fail with FATAL_ERROR if buildcache is not found.
 
@@ -85,6 +87,9 @@ function(cth_enable_build_cache)
     endif()
 
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>" PARENT_SCOPE)
+
+    # a clang precompiled header stores the mtimes of its headers: a cached one fails against a fresh checkout
+    add_compile_options("$<$<COMPILE_LANG_AND_ID:CXX,Clang>:SHELL:-Xclang -fno-pch-timestamp>")
 
     set(CMAKE_C_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${BUILDCACHE_EXECUTABLE}" PARENT_SCOPE)
