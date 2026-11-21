@@ -652,7 +652,7 @@ endfunction()
 #]]
 function(_cth_add_pkg_target)
     get_property(INSTALLABLE_TARGETS GLOBAL PROPERTY _CTH_INSTALLABLE_TARGETS)
-    cth_assert_not_empty("${INSTALLABLE_TARGETS}" "No installable targets were registered — use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
+    cth_assert_not_empty("${INSTALLABLE_TARGETS}" "No installable targets were registered: use cth_pkg_target_include_directories or add to _CTH_INSTALLABLE_TARGETS manually")
 
     set(INSTALL_TARGET_NAME "${PROJECT_NAME}_package")
     set(INSTALL_COMMENT "Packaging ${PROJECT_NAME} project...")

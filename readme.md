@@ -73,6 +73,17 @@ this is more or less for me, very handy but no backwards compatibility guarantee
   - `cth_find_program`: locate an external program and export path to parent scope.
   - `cth_find_clang_format`: locate clang-format executable and export path to parent scope.
 
+## GLSL language
+GLSL as a CMake language: `glslc` compiles the shaders to SPIR-V, like a C++ compiler compiles sources.
+
+  - `enable_language(GLSL)`: finds `glslc` in the Vulkan SDK (`VULKAN_SDK`) or the `PATH`, `CMAKE_GLSL_COMPILER` overrides it.
+  - shaders go into an OBJECT library of their own: `add_library(<name>_shaders OBJECT <shaders...>)`, a STATIC library would archive the `.spv` files.
+  - sources: the stage extensions of glslc (`.vert`, `.frag`, `.comp`, ...), `.glsl` includes in the source list are not compiled.
+  - `$<TARGET_OBJECTS:<name>_shaders>` lists the `.spv` files: `<source name>.spv`, e.g. `a.vert.spv`.
+  - include directories, compile definitions and compile options of linked targets reach glslc, a changed include compiles the shader again.
+  - `CMAKE_GLSL_FLAGS` and `CMAKE_GLSL_FLAGS_<CONFIG>` hold the flags of the user, project flags like `--target-env` are compile options: `add_compile_options($<$<COMPILE_LANGUAGE:GLSL>:--target-env=vulkan1.3>)`.
+  - the configuration decides the optimization, like for C++: Debug `-g`, Release `-O`, RelWithDebInfo `-O -g`, MinSizeRel `-Os`.
+
 ## toolchain.cmake
   - (toolchain configuration): contains the project's recommended toolchain preset for CMake.
 
