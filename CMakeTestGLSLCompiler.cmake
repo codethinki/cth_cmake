@@ -3,6 +3,8 @@
 
 # checks that the GLSL compiler compiles a simple shader, see CMakeDetermineGLSLCompiler.cmake
 
+include(cth_assertions)
+
 if(NOT CMAKE_GLSL_COMPILER_WORKS)
     set(CTH_GLSL_TEST_DIR "${CMAKE_PLATFORM_INFO_DIR}/CompilerTestGLSL")
     file(WRITE "${CTH_GLSL_TEST_DIR}/test.comp" "#version 450\nlayout(local_size_x = 1) in;\nvoid main() {}\n")
@@ -14,10 +16,8 @@ if(NOT CMAKE_GLSL_COMPILER_WORKS)
         ERROR_VARIABLE CTH_GLSL_TEST_OUTPUT
     )
 
-    if(NOT CTH_GLSL_TEST_RESULT EQUAL 0)
-        message(FATAL_ERROR
-            "The GLSL compiler \"${CMAKE_GLSL_COMPILER}\" does not compile a simple shader:\n${CTH_GLSL_TEST_OUTPUT}")
-    endif()
+    cth_assert_true(CTH_GLSL_TEST_RESULT EQUAL 0
+        REASON "the GLSL compiler \"${CMAKE_GLSL_COMPILER}\" does not compile a simple shader:\n${CTH_GLSL_TEST_OUTPUT}")
 
     message(STATUS "Check for working GLSL compiler: ${CMAKE_GLSL_COMPILER} - works")
     set(CMAKE_GLSL_COMPILER_WORKS 1 CACHE INTERNAL "")
