@@ -21,7 +21,7 @@ include(cth_assertions)
 
       **Other compilers (GCC, Clang):**
 
-      - Adds ``-fexceptions`` flag to enable exception handling
+      - Adds ``-fexceptions`` flag to enable exception handling, for C and C++ only
 
 #]]
 function(cth_set_compiler_specifics)
@@ -33,7 +33,8 @@ function(cth_set_compiler_specifics)
          $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/utf-8>
       )
    else()
-      add_compile_options(-fexceptions)
+      # the other languages reject it, e.g. glslc of the GLSL language
+      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fexceptions>)
    endif()
 endfunction()
 
